@@ -1,1 +1,95 @@
-<p>carrinho works!</p>
+<section class="pagina-carrinho">
+    <div class="cabecalho">
+        <h1>Meu carrinho</h1>
+        <p>Confira os produtos escolhidos antes de continuar.</p>
+    </div>
+
+    @if (carrinho.itens().length > 0) {
+    <div class="layout-carrinho">
+        <div class="lista-produtos">
+            @for (item of carrinho.itens(); track item.produto.id) {
+            <div class="item">
+                <img [src]="item.produto.imagem" [alt]="item.produto.nome" />
+
+                <div class="informacoes">
+                    <a [routerLink]="['/produto', item.produto.id]">
+                        <h2>{{ item.produto.nome }}</h2>
+                    </a>
+
+                    <p>{{ item.produto.produtor }}</p>
+                    <p>Material: {{ item.produto.material }}</p>
+
+                    <strong>
+                        {{ item.produto.preco | currency:'BRL' }}
+                    </strong>
+                </div>
+
+                <div class="controles">
+                    <div class="quantidade">
+                        <button mat-icon-button (click)="diminuir(item.produto.id)" aria-label="Diminuir quantidade">
+                            <mat-icon>remove</mat-icon>
+                        </button>
+
+                        <span>{{ item.quantidade }}</span>
+
+                        <button mat-icon-button (click)="aumentar(item.produto.id)"
+                            [disabled]="item.quantidade >= item.produto.estoque" aria-label="Aumentar quantidade">
+                            <mat-icon>add</mat-icon>
+                        </button>
+                    </div>
+
+                    <button mat-button class="remover" (click)="remover(item.produto.id)">
+                        <mat-icon>delete_outline</mat-icon>
+                        Remover
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+
+        <aside class="resumo">
+            <h2>Resumo do pedido</h2>
+
+            <div class="linha">
+                <span>Produtos ({{ carrinho.quantidadeTotal() }})</span>
+                <strong>{{ carrinho.subtotal() | currency:'BRL' }}</strong>
+            </div>
+
+            <div class="linha">
+                <span>Entrega compartilhada</span>
+                <span>A calcular</span>
+            </div>
+
+            <div class="total">
+                <span>Subtotal</span>
+                <strong>{{ carrinho.subtotal() | currency:'BRL' }}</strong>
+            </div>
+
+            <p class="aviso">
+                A taxa de entrega será estimada no checkout e
+                definida quando o lote coletivo fechar.
+                O pagamento será feito na retirada.
+            </p>
+
+            <button mat-flat-button disabled>
+                Continuar para retirada
+            </button>
+
+            <a mat-button routerLink="/">
+                Continuar comprando
+            </a>
+        </aside>
+    </div>
+
+    @if (mensagemErro) {
+    <p class="mensagem-erro">{{ mensagemErro }}</p>
+    }
+    } @else {
+    <div class="carrinho-vazio">
+        <mat-icon>shopping_cart</mat-icon>
+        <h2>Seu carrinho está vazio</h2>
+        <p>Explore o catálogo e escolha seus produtos favoritos.</p>
+        <a mat-flat-button routerLink="/">Explorar produtos</a>
+    </div>
+    }
+</section>

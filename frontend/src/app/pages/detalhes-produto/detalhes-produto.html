@@ -44,15 +44,16 @@
                     <mat-icon>add</mat-icon>
                 </button>
             </div>
-
-            <button mat-flat-button disabled>
+            <button mat-flat-button (click)="adicionarAoCarrinho()" [disabled]="produto.estoque === 0">
                 <mat-icon>shopping_cart</mat-icon>
                 Adicionar ao carrinho
             </button>
 
-            <p class="aviso">
-                O carrinho será habilitado na próxima etapa.
-            </p>
+            @if (mensagemErro) {
+            <p class="mensagem-erro">{{ mensagemErro }}</p>
+            }
+
+
         </div>
     </div>
     } @else {

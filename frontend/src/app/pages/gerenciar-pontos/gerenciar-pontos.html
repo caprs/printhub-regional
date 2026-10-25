@@ -1,0 +1,117 @@
+<section class="gerenciar-pontos">
+    <div class="cabecalho">
+        <div>
+            <h1>Gerenciar pontos de retirada</h1>
+            <p>Cadastre e administre os estabelecimentos parceiros.</p>
+        </div>
+
+        <button mat-flat-button (click)="novoPonto()">
+            <mat-icon>add</mat-icon>
+            Novo ponto
+        </button>
+    </div>
+
+    <p class="aviso-demo">
+        Gerenciamento demonstrativo. As alterações ainda não são salvas no banco de dados.
+    </p>
+
+    @if (mensagem) {
+    <p class="mensagem">{{ mensagem }}</p>
+    }
+
+    @if (formularioAberto) {
+    <form class="formulario" (ngSubmit)="salvar()" #pontoForm="ngForm">
+        <h2>
+            {{ pontoEditandoId === null ? 'Cadastrar ponto' : 'Editar ponto' }}
+        </h2>
+
+        <div class="campos">
+            <mat-form-field appearance="outline">
+                <mat-label>Nome do ponto</mat-label>
+                <input matInput name="nome" [(ngModel)]="formulario.nome" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Endereço</mat-label>
+                <input matInput name="endereco" [(ngModel)]="formulario.endereco" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Bairro</mat-label>
+                <input matInput name="bairro" [(ngModel)]="formulario.bairro" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Cidade</mat-label>
+                <input matInput name="cidade" [(ngModel)]="formulario.cidade" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Custo de entrega (R$)</mat-label>
+                <input matInput type="number" name="custoEntrega" [(ngModel)]="formulario.custoEntrega" min="0"
+                    step="0.01" required>
+            </mat-form-field>
+
+            <div class="campo-status">
+                <mat-slide-toggle name="ativo" [(ngModel)]="formulario.ativo">
+                    Ponto ativo
+                </mat-slide-toggle>
+            </div>
+        </div>
+
+        <div class="acoes-formulario">
+            <button mat-button type="button" (click)="cancelar()">
+                Cancelar
+            </button>
+
+            <button mat-flat-button type="submit" [disabled]="pontoForm.invalid">
+                Salvar ponto
+            </button>
+        </div>
+    </form>
+    }
+
+    <div class="titulo-lista">
+        <h2>Pontos cadastrados</h2>
+        <span>{{ pontos().length }} pontos</span>
+    </div>
+
+    <div class="grid-pontos">
+        @for (ponto of pontos(); track ponto.id) {
+        <mat-card class="ponto-card">
+            <mat-card-content>
+                <div class="ponto-topo">
+                    <mat-icon>storefront</mat-icon>
+
+                    <span [class.inativo]="!ponto.ativo" class="status">
+                        {{ ponto.ativo ? 'Ativo' : 'Inativo' }}
+                    </span>
+                </div>
+
+                <h3>{{ ponto.nome }}</h3>
+
+                <p>{{ ponto.endereco }}</p>
+                <p>{{ ponto.bairro }} — {{ ponto.cidade }}</p>
+
+                <div class="custo">
+                    <span>Custo de entrega</span>
+                    <strong>{{ ponto.custoEntrega | currency:'BRL' }}</strong>
+                </div>
+            </mat-card-content>
+
+            <mat-card-actions>
+                <button mat-stroked-button (click)="editarPonto(ponto)">
+                    <mat-icon>edit</mat-icon>
+                    Editar
+                </button>
+
+                <button mat-button (click)="alternarStatus(ponto)">
+                    {{ ponto.ativo ? 'Desativar' : 'Ativar' }}
+                </button>
+            </mat-card-actions>
+        </mat-card>
+        } @empty {
+        <p>Nenhum ponto de retirada cadastrado.</p>
+        }
+    </div>
+</section>

@@ -59,6 +59,20 @@ export const routes: Routes = [
       .then(m => m.PontoRetirada),
   title: 'PrintHub Regional | Ponto de retirada'
 },
+{
+  path: 'dashboard',
+  loadComponent: () =>
+    import('./pages/dashboard/dashboard')
+      .then(m => m.Dashboard),
+  title: 'PrintHub Regional | Dashboard administrativo'
+},
+{
+  path: 'gerenciar-pontos',
+  loadComponent: () =>
+    import('./pages/gerenciar-pontos/gerenciar-pontos')
+      .then(m => m.GerenciarPontos),
+  title: 'PrintHub Regional | Gerenciar pontos de retirada'
+},
   {
     path: '**',
     redirectTo: ''

@@ -1,0 +1,238 @@
+
+.dashboard {
+  max-width: 1200px;
+  min-height: 85vh;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+
+  h1 {
+    margin: 0 0 8px;
+    color: #172033;
+    font-size: 32px;
+  }
+
+  p {
+    color: #64748b;
+  }
+}
+
+.identificacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.aviso-demo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 14px;
+}
+
+.grid-indicadores {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 56px;
+}
+
+.indicador {
+  border-radius: 16px;
+
+  mat-card-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  span {
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  strong {
+    color: #172033;
+    font-size: 34px;
+  }
+
+  small {
+    color: #94a3b8;
+  }
+}
+
+.icone {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+
+  &.azul {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+
+  &.laranja {
+    background: #ffedd5;
+    color: #ea580c;
+  }
+
+  &.verde {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  &.roxo {
+    background: #f3e8ff;
+    color: #9333ea;
+  }
+}
+
+.titulo-secao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0 0 8px;
+    color: #172033;
+  }
+
+  p,
+  span {
+    color: #64748b;
+  }
+}
+
+.grid-lotes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.lote-card {
+  border-radius: 16px;
+
+  mat-card-content {
+    padding: 24px;
+  }
+}
+
+.lote-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.status-lote {
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ponto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 20px 0;
+  color: #64748b;
+}
+
+.dados-lote {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  span {
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  strong {
+    color: #172033;
+  }
+}
+
+.progresso {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.barra {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 10px;
+}
+
+.lote-card small {
+  color: #64748b;
+}
+
+.observacao {
+  margin-top: 24px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+@media (max-width: 1000px) {
+  .grid-indicadores {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .dashboard {
+    padding: 28px 16px;
+  }
+
+  .cabecalho,
+  .titulo-secao {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .grid-indicadores,
+  .grid-lotes {
+    grid-template-columns: 1fr;
+  }
+}

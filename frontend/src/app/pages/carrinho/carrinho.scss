@@ -1,0 +1,191 @@
+
+.pagina-carrinho {
+  max-width: 1200px;
+  min-height: 80vh;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.cabecalho {
+  margin-bottom: 36px;
+
+  h1 {
+    margin-bottom: 8px;
+    color: #172033;
+    font-size: 32px;
+  }
+
+  p {
+    color: #64748b;
+  }
+}
+
+.layout-carrinho {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.lista-produtos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+
+  img {
+    width: 130px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+}
+
+.informacoes {
+  flex: 1;
+  min-width: 0;
+
+  a {
+    color: #172033;
+    text-decoration: none;
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 18px;
+  }
+
+  p {
+    margin: 5px 0;
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  strong {
+    display: block;
+    margin-top: 12px;
+    font-size: 18px;
+  }
+}
+
+.controles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantidade {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remover {
+  color: #b91c1c !important;
+}
+
+.resumo {
+  padding: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+
+  h2 {
+    margin: 0 0 28px;
+    font-size: 21px;
+  }
+
+  .linha,
+  .total {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .linha {
+    color: #475569;
+  }
+
+  .total {
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 19px;
+  }
+
+  .aviso {
+    margin: 24px 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  > button,
+  > a {
+    display: flex;
+    width: 100%;
+    margin-top: 12px;
+  }
+}
+
+.carrinho-vazio {
+  padding: 80px 20px;
+  text-align: center;
+
+  mat-icon {
+    width: 64px;
+    height: 64px;
+    color: #94a3b8;
+    font-size: 64px;
+  }
+
+  h2 {
+    margin-top: 20px;
+  }
+
+  p {
+    margin-bottom: 24px;
+    color: #64748b;
+  }
+}
+
+.mensagem-erro {
+  color: #b91c1c;
+}
+
+@media (max-width: 900px) {
+  .layout-carrinho {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .pagina-carrinho {
+    padding: 28px 16px;
+  }
+
+  .item {
+    flex-wrap: wrap;
+
+    img {
+      width: 100px;
+      height: 100px;
+    }
+  }
+
+  .controles {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}

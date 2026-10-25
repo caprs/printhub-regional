@@ -1,0 +1,220 @@
+<section class="painel-produtor">
+    <div class="cabecalho">
+        <div>
+            <h1>Painel do produtor</h1>
+            <p>Gerencie seus produtos no PrintHub Regional.</p>
+        </div>
+
+        <button mat-flat-button (click)="novoProduto()">
+            <mat-icon>add</mat-icon>
+            Novo produto
+        </button>
+    </div>
+
+    @if (mensagem) {
+    <p class="mensagem">{{ mensagem }}</p>
+    }
+
+    @if (formularioAberto()) {
+    <form class="formulario" (ngSubmit)="salvar()" #produtoForm="ngForm">
+        <h2>
+            {{ produtoEditandoId === null ? 'Cadastrar produto' : 'Editar produto' }}
+        </h2>
+
+        <div class="campos">
+            <mat-form-field appearance="outline">
+                <mat-label>Nome do produto</mat-label>
+                <input matInput name="nome" [(ngModel)]="formulario.nome" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Categoria</mat-label>
+                <mat-select name="categoria" [(ngModel)]="formulario.categoria" required>
+                    @for (categoria of categorias; track categoria) {
+                    <mat-option [value]="categoria">
+                        {{ categoria }}
+                    </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Material</mat-label>
+                <input matInput name="material" [(ngModel)]="formulario.material" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Preço (R$)</mat-label>
+                <input matInput type="number" name="preco" [(ngModel)]="formulario.preco" min="0.01" step="0.01"
+                    required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Estoque</mat-label>
+                <input matInput type="number" name="estoque" [(ngModel)]="formulario.estoque" min="0" step="1" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Prazo de produção (dias)</mat-label>
+                <input matInput type="number" name="prazoProducao" [(ngModel)]="formulario.prazoProducao" min="1"
+                    step="1" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="campo-largo">
+                <mat-label>URL da imagem</mat-label>
+                <input matInput name="imagem" [(ngModel)]="formulario.imagem" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="campo-largo">
+                <mat-label>Descrição</mat-label>
+                <textarea matInput name="descricao" [(ngModel)]="formulario.descricao" rows="4" required></textarea>
+            </mat-form-field>
+        </div>
+
+        <div class="acoes-formulario">
+            <button mat-button type="button" (click)="cancelar()">
+                Cancelar
+            </button>
+
+            <button mat-flat-button type="submit" [disabled]="produtoForm.invalid">
+                Salvar produto
+            </button>
+        </div>
+    </form>
+    }
+
+    <div class="titulo-lista">
+        <h2>Meus produtos</h2>
+        <span>{{ meusProdutos().length }} cadastrados</span>
+    </div>
+
+    <div class="grid-produtos">
+        @for (produto of meusProdutos(); track produto.id) {
+        <mat-card class="produto-card">
+            <img mat-card-image [src]="produto.imagem" [alt]="produto.nome">
+
+            <mat-card-content>
+                <span class="categoria">{{ produto.categoria }}</span>
+                <h3>{{ produto.nome }}</h3>
+
+                <p>{{ produto.material }} • {{ produto.estoque }} unidades</p>
+
+                <strong>{{ produto.preco | currency:'BRL' }}</strong>
+            </mat-card-content>
+
+            <mat-card-actions>
+                <button mat-stroked-button (click)="editarProduto(produto)">
+                    <mat-icon>edit</mat-icon>
+                    Editar
+                </button>
+
+                <button mat-button class="excluir" (click)="excluirProduto(produto)">
+                    <mat-icon>delete</mat-icon>
+                    Excluir
+                </button>
+            </mat-card-actions>
+        </mat-card>
+        } @empty {
+        <div class="sem-produtos">
+            <h3>Nenhum produto cadastrado</h3>
+            <p>Comece adicionando seu primeiro produto.</p>
+        </div>
+        }
+    </div>
+
+    <div class="secao-pedidos">
+        <div class="titulo-lista">
+            <h2>Pedidos recebidos</h2>
+            <span>{{ pedidosRecebidos().length }} pedidos</span>
+        </div>
+
+        <p class="descricao-pedidos">
+            Acompanhe os pedidos dos seus clientes e atualize a produção.
+        </p>
+
+        <div class="aviso-demo">
+            <mat-icon>info</mat-icon>
+            Pedidos demonstrativos até a integração com a API.
+        </div>
+
+        @if (mensagemPedido) {
+        <p class="mensagem">{{ mensagemPedido }}</p>
+        }
+
+        <div class="lista-pedidos">
+            @for (pedido of pedidosRecebidos(); track pedido.id) {
+            <article class="pedido-card">
+                <div class="pedido-cabecalho">
+                    <div>
+                        <h3>Pedido #{{ pedido.id }}</h3>
+                        <p>{{ pedido.cliente }}</p>
+                    </div>
+
+                    <span class="status-pedido">
+                        {{ nomeStatusPedido(pedido.status) }}
+                    </span>
+                </div>
+
+                <div class="pedido-informacoes">
+                    <div>
+                        <span>Produtos</span>
+                        @for (produto of pedido.produtos; track $index) {
+                        <p>{{ produto }}</p>
+                        }
+                    </div>
+
+                    <div>
+                        <span>Ponto de retirada</span>
+                        <strong>{{ pedido.pontoRetirada }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Data do pedido</span>
+                        <strong>{{ pedido.data | date:'dd/MM/yyyy':'UTC' }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Subtotal</span>
+                        <strong>{{ pedido.subtotal | currency:'BRL' }}</strong>
+                    </div>
+                </div>
+
+                <div class="pedido-acoes">
+                    @switch (pedido.status) {
+                    @case ('AGUARDANDO_ACEITACAO') {
+                    <button mat-flat-button (click)="atualizarStatusPedido(pedido.id, 'ACEITO')">
+                        Aceitar pedido
+                    </button>
+
+                    <button mat-stroked-button (click)="atualizarStatusPedido(pedido.id, 'REJEITADO')">
+                        Rejeitar pedido
+                    </button>
+                    }
+
+                    @case ('ACEITO') {
+                    <button mat-flat-button (click)="atualizarStatusPedido(pedido.id, 'EM_PRODUCAO')">
+                        Iniciar produção
+                    </button>
+                    }
+
+                    @case ('EM_PRODUCAO') {
+                    <button mat-flat-button (click)="atualizarStatusPedido(pedido.id, 'PRONTO_PARA_ENTREGA')">
+                        Finalizar produção
+                    </button>
+                    }
+
+                    @default {
+                    <span class="sem-acoes">
+                        Nenhuma ação disponível neste status.
+                    </span>
+                    }
+                    }
+                </div>
+            </article>
+            } @empty {
+            <p>Nenhum pedido recebido até o momento.</p>
+            }
+        </div>
+    </div>
+
+</section>

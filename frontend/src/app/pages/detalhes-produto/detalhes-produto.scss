@@ -1,0 +1,113 @@
+.detalhes {
+  max-width: 1200px;
+  min-height: 80vh;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 36px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.produto {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.imagem {
+  overflow: hidden;
+  border-radius: 20px;
+  background: #eff6ff;
+
+  img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+}
+
+.informacoes {
+  .categoria {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  h1 {
+    margin: 14px 0;
+    color: #172033;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.2;
+  }
+
+  .produtor {
+    color: #64748b;
+  }
+
+  .preco {
+    display: block;
+    margin: 28px 0;
+    color: #172033;
+    font-size: 32px;
+  }
+
+  .descricao {
+    color: #475569;
+    line-height: 1.7;
+  }
+
+  .caracteristicas {
+    margin: 28px 0;
+    padding: 20px;
+    border-radius: 12px;
+    background: #f8fafc;
+
+    p {
+      margin: 10px 0;
+      color: #475569;
+    }
+  }
+}
+
+.quantidade {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.aviso {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.nao-encontrado {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+@media (max-width: 768px) {
+  .produto {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .detalhes {
+    padding: 24px 16px;
+  }
+}
+
+.mensagem-erro {
+  margin-top: 12px;
+  color: #b91c1c;
+  font-size: 14px;
+}

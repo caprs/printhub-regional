@@ -1,0 +1,93 @@
+<section class="meus-pedidos">
+    <div class="cabecalho">
+        <h1>Meus pedidos</h1>
+        <p>Acompanhe suas compras e os pontos de retirada.</p>
+    </div>
+
+    <div class="aviso-demo">
+        <mat-icon>info</mat-icon>
+        <span>
+            Pedidos demonstrativos para desenvolvimento da interface.
+        </span>
+    </div>
+
+    @for (pedido of pedidos; track pedido.id) {
+    <article class="pedido-card">
+        <div class="pedido-topo">
+            <div>
+                <span class="numero">Pedido #{{ pedido.id }}</span>
+                <p>Realizado em {{ pedido.data | date:'dd/MM/yyyy':'UTC' }}</p>
+            </div>
+
+            <span class="status" [ngClass]="classeStatus(pedido.status)">
+                {{ nomeStatus(pedido.status) }}
+            </span>
+        </div>
+
+        <div class="pedido-conteudo">
+            <div class="informacao">
+                <span>Produtor</span>
+                <strong>{{ pedido.produtor }}</strong>
+            </div>
+
+            <div class="informacao">
+                <span>Produtos</span>
+                @for (produto of pedido.produtos; track $index) {
+                <p>{{ produto }}</p>
+                }
+            </div>
+
+            <div class="informacao">
+                <span>Ponto de retirada</span>
+                <strong>{{ pedido.pontoRetirada }}</strong>
+            </div>
+
+            <div class="informacao">
+                <span>Lote coletivo</span>
+                <strong>{{ pedido.lote ?? 'Aguardando aceitação' }}</strong>
+            </div>
+        </div>
+
+        <div class="pedido-rodape">
+            <div class="valores">
+                <p>
+                    Produtos:
+                    {{ pedido.subtotal | currency:'BRL' }}
+                </p>
+
+                <p>
+                    Entrega:
+                    @if (pedido.taxaEntrega !== null) {
+                    {{ pedido.taxaEntrega | currency:'BRL' }}
+                    } @else {
+                    A definir após fechamento do lote
+                    }
+                </p>
+
+                <strong>
+                    @if (pedido.taxaEntrega !== null) {
+                    Total:
+                    {{ pedido.subtotal + pedido.taxaEntrega | currency:'BRL' }}
+                    } @else {
+                    Subtotal:
+                    {{ pedido.subtotal | currency:'BRL' }}
+                    }
+                </strong>
+            </div>
+
+            <div class="acoes">
+                <a mat-stroked-button routerLink="/">
+                    Voltar ao catálogo
+                </a>
+            </div>
+        </div>
+    </article>
+    } @empty {
+    <div class="sem-pedidos">
+        <mat-icon>receipt_long</mat-icon>
+        <h2>Você ainda não tem pedidos</h2>
+        <p>Explore o catálogo para encontrar seu primeiro produto.</p>
+        <a mat-flat-button routerLink="/">Explorar produtos</a>
+    </div>
+    }
+</section>

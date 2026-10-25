@@ -1,0 +1,121 @@
+<section class="dashboard">
+    <div class="cabecalho">
+        <div>
+            <h1>Dashboard administrativo</h1>
+            <p>Acompanhe os principais indicadores do PrintHub Regional.</p>
+        </div>
+
+        <span class="identificacao">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Administração
+        </span>
+    </div>
+
+    <div class="aviso-demo">
+        <mat-icon>info</mat-icon>
+        Indicadores demonstrativos até a integração com a API.
+    </div>
+
+    <div class="grid-indicadores">
+        <mat-card class="indicador">
+            <mat-card-content>
+                <div class="icone azul">
+                    <mat-icon>shopping_bag</mat-icon>
+                </div>
+                <span>Total de pedidos</span>
+                <strong>{{ totalPedidos }}</strong>
+                <small>Pedidos de exemplo</small>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="indicador">
+            <mat-card-content>
+                <div class="icone laranja">
+                    <mat-icon>pending_actions</mat-icon>
+                </div>
+                <span>Pedidos em andamento</span>
+                <strong>{{ pedidosEmAndamento }}</strong>
+                <small>Aguardando conclusão</small>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="indicador">
+            <mat-card-content>
+                <div class="icone verde">
+                    <mat-icon>inventory_2</mat-icon>
+                </div>
+                <span>Produtos cadastrados</span>
+                <strong>{{ totalProdutos() }}</strong>
+                <small>Produtos do catálogo</small>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="indicador">
+            <mat-card-content>
+                <div class="icone roxo">
+                    <mat-icon>storefront</mat-icon>
+                </div>
+                <span>Pontos de retirada</span>
+                <strong>{{ pontosAtivos() }}</strong>
+                <small>Pontos ativos</small>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <div class="secao-lotes">
+        <div class="titulo-secao">
+            <div>
+                <h2>Lotes coletivos</h2>
+                <p>Acompanhe a formação dos lotes de entrega.</p>
+            </div>
+
+            <span>{{ totalLotes }} lotes demonstrativos</span>
+        </div>
+
+        <div class="grid-lotes">
+            @for (lote of lotesDemonstrativos; track lote.codigo) {
+            <mat-card class="lote-card">
+                <mat-card-content>
+                    <div class="lote-topo">
+                        <h3>{{ lote.codigo }}</h3>
+                        <span class="status-lote">
+                            {{ lote.status }}
+                        </span>
+                    </div>
+
+                    <p class="ponto">
+                        <mat-icon>location_on</mat-icon>
+                        {{ lote.ponto }}
+                    </p>
+
+                    <div class="dados-lote">
+                        <div>
+                            <span>Pedidos</span>
+                            <strong>{{ lote.pedidos }} / {{ lote.capacidade }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Custo de entrega</span>
+                            <strong>{{ lote.custoEntrega | currency:'BRL' }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="progresso">
+                        <div class="barra" [style.width.%]="lote.pedidos / lote.capacidade * 100"></div>
+                    </div>
+
+                    <small>
+                        {{ lote.pedidos }} de {{ lote.capacidade }} pedidos
+                        para atingir o fechamento por quantidade.
+                    </small>
+                </mat-card-content>
+            </mat-card>
+            }
+        </div>
+
+        <p class="observacao">
+            Os lotes também podem ser fechados após 7 dias, mesmo sem
+            atingir 3 pedidos.
+        </p>
+    </div>
+</section>

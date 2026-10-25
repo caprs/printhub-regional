@@ -45,6 +45,13 @@ export const routes: Routes = [
       .then(m => m.Checkout),
   title: 'PrintHub Regional | Finalizar pedido'
 },
+{
+  path: 'painel-produtor',
+  loadComponent: () =>
+    import('./pages/painel-produtor/painel-produtor')
+      .then(m => m.PainelProdutor),
+  title: 'PrintHub Regional | Painel do produtor'
+},
   {
     path: '**',
     redirectTo: ''

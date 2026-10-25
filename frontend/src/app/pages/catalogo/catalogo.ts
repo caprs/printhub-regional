@@ -1,5 +1,5 @@
 
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -34,8 +34,7 @@ export class Catalogo {
 
   private produtosService = inject(Produtos);
 
-  produtos: Produto[] = this.produtosService.listar();
-
+readonly produtos = this.produtosService.listaProdutos;
   busca = '';
   categoriaSelecionada = 'Todas';
 
@@ -50,7 +49,7 @@ export class Catalogo {
   get produtosFiltrados(): Produto[] {
     const termo = this.busca.trim().toLowerCase();
 
-    return this.produtos.filter(produto => {
+    return this.produtos().filter(produto => {
       const correspondeBusca =
         produto.nome.toLowerCase().includes(termo) ||
         produto.material.toLowerCase().includes(termo);

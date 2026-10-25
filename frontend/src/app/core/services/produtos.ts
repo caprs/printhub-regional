@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Produto } from '../models/produto.model';
 
 @Injectable({
@@ -60,11 +60,51 @@ export class Produtos {
     }
   ];
 
-  listar(): Produto[] {
-    return this.produtos;
-  }
+  
 
-  buscarPorId(id: number): Produto | undefined {
-    return this.produtos.find(produto => produto.id === id);
-  }
+ private readonly produtosSignal = signal<Produto[]>(this.produtos);
+
+readonly listaProdutos = this.produtosSignal.asReadonly();
+
+listar(): Produto[] {
+  return this.produtosSignal();
+}
+
+buscarPorId(id: number): Produto | undefined {
+  return this.produtosSignal().find(produto => produto.id === id);
+}
+
+listarPorProdutor(produtorId: number): Produto[] {
+  return this.produtosSignal().filter(
+    produto => produto.produtorId === produtorId
+  );
+}
+
+cadastrar(produto: Omit<Produto, 'id'>): void {
+  const novoId = Math.max(
+    0,
+    ...this.produtosSignal().map(item => item.id)
+  ) + 1;
+
+  this.produtosSignal.update(produtos => [
+    ...produtos,
+    { ...produto, id: novoId }
+  ]);
+}
+
+editar(id: number, dados: Partial<Produto>): void {
+  this.produtosSignal.update(produtos =>
+    produtos.map(produto =>
+      produto.id === id
+        ? { ...produto, ...dados, id: produto.id, produtorId: produto.produtorId }
+        : produto
+    )
+  );
+}
+
+excluir(id: number): void {
+  this.produtosSignal.update(produtos =>
+    produtos.filter(produto => produto.id !== id)
+  );
+}
 }

@@ -73,6 +73,13 @@ export const routes: Routes = [
       .then(m => m.GerenciarPontos),
   title: 'PrintHub Regional | Gerenciar pontos de retirada'
 },
+{
+  path: 'lotes',
+  loadComponent: () =>
+    import('./pages/lotes/lotes')
+      .then(m => m.LotesPage),
+  title: 'PrintHub Regional | Lotes coletivos'
+},
   {
     path: '**',
     redirectTo: ''

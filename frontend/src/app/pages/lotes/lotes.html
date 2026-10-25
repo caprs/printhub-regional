@@ -1,0 +1,105 @@
+<section class="pagina-lotes">
+    <div class="cabecalho">
+        <h1>Lotes coletivos</h1>
+        <p>
+            Acompanhe a formação dos lotes e a divisão dos custos
+            de entrega entre os pedidos.
+        </p>
+    </div>
+
+    <div class="aviso-demo">
+        <mat-icon>info</mat-icon>
+        Dados demonstrativos. O fechamento automático será realizado pela API.
+    </div>
+
+    <div class="resumo">
+        <mat-card>
+            <mat-card-content>
+                <span>Total de lotes</span>
+                <strong>{{ totalLotes() }}</strong>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+            <mat-card-content>
+                <span>Em formação</span>
+                <strong>{{ lotesEmFormacao() }}</strong>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+            <mat-card-content>
+                <span>Fechados</span>
+                <strong>{{ lotesFechados() }}</strong>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <div class="grid-lotes">
+        @for (lote of lotes(); track lote.id) {
+        <mat-card class="lote-card">
+            <mat-card-content>
+                <div class="lote-topo">
+                    <h2>{{ lote.codigo }}</h2>
+                    <span class="status" [class.fechado]="lote.status === 'FECHADO'">
+                        {{ nomeStatus(lote.status) }}
+                    </span>
+                </div>
+
+                <p class="local">
+                    <mat-icon>location_on</mat-icon>
+                    {{ lote.pontoRetirada }}
+                </p>
+
+                <div class="informacoes">
+                    <div>
+                        <span>Data de abertura</span>
+                        <strong>{{ lote.dataAbertura | date:'dd/MM/yyyy':'UTC' }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Prazo de formação</span>
+                        <strong>{{ lote.dataLimite | date:'dd/MM/yyyy':'UTC' }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Pedidos agrupados</span>
+                        <strong>{{ lote.quantidadePedidos }} / 3</strong>
+                    </div>
+
+                    <div>
+                        <span>Custo total da entrega</span>
+                        <strong>{{ lote.custoEntrega | currency:'BRL' }}</strong>
+                    </div>
+                </div>
+
+                <div class="progresso">
+                    <div class="barra" [style.width.%]="progresso(lote.quantidadePedidos)"></div>
+                </div>
+
+                <p class="estimativa">
+                    @if (lote.status === 'EM_FORMACAO') {
+                    Taxa estimada por pedido:
+                    <strong>
+                        {{ estimativaEntrega(lote.custoEntrega, lote.quantidadePedidos) | currency:'BRL' }}
+                    </strong>
+                    } @else {
+                    Divisão ilustrativa por pedido:
+                    <strong>
+                        {{ estimativaEntrega(lote.custoEntrega, lote.quantidadePedidos) | currency:'BRL' }}
+                    </strong>
+                    }
+                </p>
+
+                <p class="observacao">
+                    @if (lote.status === 'EM_FORMACAO') {
+                    O lote fecha ao atingir 3 pedidos aceitos ou completar 7 dias.
+                    } @else {
+                    Lote encerrado para novos pedidos.
+                    }
+                </p>
+            </mat-card-content>
+        </mat-card>
+        }
+    </div>
+</section>

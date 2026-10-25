@@ -32,6 +32,13 @@ export const routes: Routes = [
     title: 'PrintHub Regional | Meus pedidos'
   },
   {
+  path: 'produto/:id',
+  loadComponent: () =>
+    import('./pages/detalhes-produto/detalhes-produto')
+      .then(m => m.DetalhesProduto),
+  title: 'PrintHub Regional | Detalhes do produto'
+},
+  {
     path: '**',
     redirectTo: ''
   }

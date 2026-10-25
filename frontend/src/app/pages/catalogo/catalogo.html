@@ -69,9 +69,9 @@
                 </mat-card-content>
 
                 <mat-card-actions>
-                    <button mat-stroked-button disabled>
+                    <a mat-stroked-button [routerLink]="['/produto', produto.id]">
                         Ver detalhes
-                    </button>
+                    </a>
                 </mat-card-actions>
             </mat-card>
             } @empty {

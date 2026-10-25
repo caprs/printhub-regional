@@ -52,6 +52,13 @@ export const routes: Routes = [
       .then(m => m.PainelProdutor),
   title: 'PrintHub Regional | Painel do produtor'
 },
+{
+  path: 'ponto-retirada',
+  loadComponent: () =>
+    import('./pages/ponto-retirada/ponto-retirada')
+      .then(m => m.PontoRetirada),
+  title: 'PrintHub Regional | Ponto de retirada'
+},
   {
     path: '**',
     redirectTo: ''

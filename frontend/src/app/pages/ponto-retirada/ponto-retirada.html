@@ -1,1 +1,107 @@
-<p>ponto-retirada works!</p>
+<section class="painel-retirada">
+    <div class="cabecalho">
+        <div>
+            <h1>Painel do ponto de retirada</h1>
+            <p>Gerencie o recebimento e a retirada dos pedidos.</p>
+        </div>
+
+        <div class="identificacao">
+            <mat-icon>storefront</mat-icon>
+            <span>{{ nomePonto }}</span>
+        </div>
+    </div>
+
+    <div class="aviso-demo">
+        <mat-icon>info</mat-icon>
+        <span>
+            Pedidos demonstrativos. O vínculo do atendente ao ponto
+            será validado pela API.
+        </span>
+    </div>
+
+    @if (mensagem) {
+    <p class="mensagem">{{ mensagem }}</p>
+    }
+
+    <div class="titulo-lista">
+        <h2>Pedidos do ponto</h2>
+        <span>{{ pedidos().length }} pedidos</span>
+    </div>
+
+    <div class="lista-pedidos">
+        @for (pedido of pedidos(); track pedido.id) {
+        <article class="pedido-card">
+            <div class="pedido-topo">
+                <div>
+                    <h3>Pedido #{{ pedido.id }}</h3>
+                    <p>Lote coletivo: {{ pedido.lote }}</p>
+                </div>
+
+                <span class="status">
+                    {{ nomeStatus(pedido.status) }}
+                </span>
+            </div>
+
+            <div class="informacoes">
+                <div>
+                    <span>Consumidor</span>
+                    <strong>{{ pedido.cliente }}</strong>
+                </div>
+
+                <div>
+                    <span>Produtor</span>
+                    <strong>{{ pedido.produtor }}</strong>
+                </div>
+
+                <div>
+                    <span>Produtos</span>
+                    @for (produto of pedido.produtos; track $index) {
+                    <p>{{ produto }}</p>
+                    }
+                </div>
+
+                <div>
+                    <span>Ponto de retirada</span>
+                    <strong>{{ nomePonto }}</strong>
+                </div>
+            </div>
+
+            <div class="acoes">
+                @switch (pedido.status) {
+                @case ('AGUARDANDO_RECEBIMENTO') {
+                <button mat-flat-button (click)="atualizarStatus(
+                  pedido.id,
+                  'DISPONIVEL_RETIRADA'
+                )">
+                    <mat-icon>inventory_2</mat-icon>
+                    Confirmar recebimento
+                </button>
+                }
+
+                @case ('DISPONIVEL_RETIRADA') {
+                <button mat-flat-button (click)="atualizarStatus(
+                  pedido.id,
+                  'RETIRADO'
+                )">
+                    <mat-icon>check_circle</mat-icon>
+                    Confirmar retirada
+                </button>
+                }
+
+                @case ('RETIRADO') {
+                <span class="finalizado">
+                    <mat-icon>check_circle</mat-icon>
+                    Pedido retirado pelo consumidor
+                </span>
+                }
+                }
+            </div>
+        </article>
+        } @empty {
+        <div class="sem-pedidos">
+            <h3>Nenhum pedido encontrado</h3>
+            <p>Não existem pedidos destinados a este ponto.</p>
+        </div>
+        }
+    </div>
+</section>

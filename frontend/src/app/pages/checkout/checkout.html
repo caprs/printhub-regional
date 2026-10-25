@@ -1,0 +1,97 @@
+<section class="checkout">
+    <a routerLink="/carrinho" class="voltar">
+        <mat-icon>arrow_back</mat-icon>
+        Voltar ao carrinho
+    </a>
+
+    <h1>Finalizar pedido</h1>
+    <p class="subtitulo">
+        Escolha onde deseja retirar seus produtos.
+    </p>
+
+    @if (carrinho.itens().length > 0) {
+    <div class="layout-checkout">
+        <div class="pontos">
+            <h2>Selecione um ponto de retirada</h2>
+
+            <mat-radio-group [value]="pontoSelecionadoId" (change)="selecionarPonto($event.value)">
+                @for (ponto of pontos; track ponto.id) {
+                <div class="ponto">
+                    <mat-radio-button [value]="ponto.id">
+                        <strong>{{ ponto.nome }}</strong>
+                    </mat-radio-button>
+
+                    <p>{{ ponto.endereco }}</p>
+                    <p>{{ ponto.cidade }}</p>
+                </div>
+                }
+            </mat-radio-group>
+        </div>
+
+        <aside class="resumo">
+            <h2>Resumo do pedido</h2>
+
+            <div class="linha">
+                <span>Subtotal dos produtos</span>
+                <strong>
+                    {{ carrinho.subtotal() | currency:'BRL' }}
+                </strong>
+            </div>
+
+            <div class="linha">
+                <span>Entrega compartilhada</span>
+                <strong>
+                    @if (pontoSelecionado) {
+                    {{ taxaEstimada | currency:'BRL' }}
+                    } @else {
+                    A definir
+                    }
+                </strong>
+            </div>
+
+            <div class="total">
+                <span>Total estimado</span>
+                <strong>
+                    @if (pontoSelecionado) {
+                    {{ totalEstimado | currency:'BRL' }}
+                    } @else {
+                    A definir
+                    }
+                </strong>
+            </div>
+
+            <p class="aviso">
+                A taxa definitiva será calculada quando o
+                lote coletivo fechar. O pagamento será
+                realizado presencialmente na retirada.
+            </p>
+
+            <button mat-flat-button [disabled]="!pontoSelecionado" (click)="mostrarConfirmacao()">
+                Revisar pedido
+            </button>
+        </aside>
+    </div>
+
+    @if (confirmacaoVisivel) {
+    <div class="confirmacao">
+        <mat-icon>info</mat-icon>
+
+        <div>
+            <h3>Pedido pronto para integração</h3>
+            <p>
+                Você selecionou {{ pontoSelecionado?.nome }}.
+                O envio real do pedido será habilitado
+                quando a API estiver conectada.
+            </p>
+        </div>
+    </div>
+    }
+    } @else {
+    <div class="vazio">
+        <h2>Seu carrinho está vazio</h2>
+        <a mat-flat-button routerLink="/">
+            Explorar produtos
+        </a>
+    </div>
+    }
+</section>

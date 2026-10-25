@@ -38,6 +38,13 @@ export const routes: Routes = [
       .then(m => m.DetalhesProduto),
   title: 'PrintHub Regional | Detalhes do produto'
 },
+{
+  path: 'checkout',
+  loadComponent: () =>
+    import('./pages/checkout/checkout')
+      .then(m => m.Checkout),
+  title: 'PrintHub Regional | Finalizar pedido'
+},
   {
     path: '**',
     redirectTo: ''

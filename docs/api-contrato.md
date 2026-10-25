@@ -1,6 +1,9 @@
 # Contrato da API — PrintHub Regional
 
-Versão 0.1 · 25/10/2026 · Backend: Miguel
+Versão 1.0 · 25/10/2026 · Backend: Miguel
+
+Todas as rotas deste documento estão implementadas e testadas.
+Documentação interativa (Swagger): `http://localhost:3000/api/docs`.
 
 Este documento diz **o que o Angular envia e o que recebe** em cada rota.
 Os nomes dos campos seguem os modelos que já existem em `frontend/src/app/core/models`, para mudar o mínimo possível no frontend.
@@ -51,6 +54,8 @@ A `mensagem` já vem pronta para mostrar ao usuário.
 | 403 | Logado, mas o perfil não pode fazer isso |
 | 404 | Não encontrado |
 | 409 | Regra de negócio impediu (estoque, status, prazo) |
+| 413 | Corpo da requisição grande demais (acima de 100 KB) |
+| 429 | Muitas tentativas de login/cadastro (`MUITAS_TENTATIVAS`) |
 
 ---
 
@@ -86,11 +91,11 @@ Mesmos nomes de `lote.model.ts`:
 
 | Status | Significado |
 |---|---|
-| `EM_FORMACAO` | Recebendo pedidos aceitos |
-| `FECHADO` | Chegou a 3 pedidos ou a 7 dias. Taxa definitiva calculada. |
-| `AGUARDANDO_PRODUCAO` | Fechado, mas algum pedido ainda não está pronto |
-| `PRONTO_PARA_ENTREGA` | Fechado e todos os pedidos prontos |
-| `CONCLUIDO` | Todos os pedidos retirados |
+| `EM_FORMACAO` | Recebendo pedidos aceitos. Taxa ainda estimada. |
+| `FECHADO` | Chegou a 3 pedidos ou a 7 dias. Taxa definitiva. Nenhum pedido começou a produção. |
+| `AGUARDANDO_PRODUCAO` | Fechado; a produção começou, mas nem todos os pedidos estão prontos |
+| `PRONTO_PARA_ENTREGA` | Fechado e todos os pedidos prontos, no ponto ou retirados |
+| `CONCLUIDO` | Todos os pedidos retirados (ou o lote venceu sem nenhum pedido ativo) |
 
 O backend muda o status do lote sozinho. O frontend só lê.
 
@@ -221,14 +226,16 @@ Envia:
 }
 ```
 - O produtor vem do token. Não envie `produtorId`.
-- `imagem`: URL. **Pendente:** upload de arquivo não faz parte do MVP.
-- `nome` 3–120 caracteres · `preco` > 0 · `estoque` ≥ 0 · `prazoProducao` 1–60 dias.
+- `imagem`: URL começando com `http://` ou `https://`. **Pendente:** upload de arquivo não faz parte do MVP.
+- `nome` 3–120 caracteres · `preco` de 0,01 a 10.000,00 · `estoque` de 0 a 100.000 · `prazoProducao` 1–60 dias.
+- Produtos de um produtor desativado pelo administrador somem do catálogo.
 
 Recebe `201` com o `Produto`.
 
 ### `PATCH /products/:id` — PRODUTOR dono
 
 Envia só os campos que mudaram. Recebe `200` com o `Produto`. `403` se não for o dono.
+Para reativar um produto excluído, envie `{ "ativo": true }`.
 
 ### `DELETE /products/:id` — PRODUTOR dono
 
@@ -256,23 +263,32 @@ Igual a `ponto-retirada.model.ts`, com o atendente e a estimativa do lote aberto
   "custoEntrega": 18,
   "ativo": true,
   "atendenteId": 5,
+  "atendente": "Atendente Centro",
   "loteAberto": {
     "id": 3,
     "codigo": "LOTE-003",
     "quantidadePedidos": 1,
-    "dataLimite": "2026-10-31T14:00:00.000Z",
-    "taxaEstimadaMaxima": 9,
-    "taxaEstimadaMinima": 6
-  }
+    "dataLimite": "2026-10-31T14:00:00.000Z"
+  },
+  "taxaEstimada": { "maxima": 9, "minima": 6 }
 }
 ```
 `loteAberto` é `null` quando não há lote em formação.
 
-**Para o checkout:** `taxaEstimadaMaxima` é a taxa se o pedido for aceito e o lote fechar sem mais ninguém. `taxaEstimadaMinima` é a taxa com o lote cheio (3 pedidos). Sem lote aberto: máxima = `custoEntrega`, mínima = `custoEntrega ÷ 3`.
+**Para o checkout:** use `taxaEstimada`, que vem sempre preenchida.
+- `maxima`: a taxa se o pedido for aceito agora e o lote fechar sem mais ninguém. Sem lote aberto, é o `custoEntrega` inteiro.
+- `minima`: a taxa com o lote cheio (3 pedidos).
+
+Mostre algo como "Taxa de entrega: até R$ 9,00 (pode cair para R$ 6,00)". Isso substitui o cálculo fixo `custoEntrega / 3` que está hoje no `checkout.ts`.
 
 ### `GET /pickup-points` — público
 
 Lista só os ativos. O administrador pode usar `?todos=true` para ver os inativos.
+Um token vencido nesta rota é ignorado (não dá 401), para o checkout não quebrar.
+
+### `GET /pickup-points/:id` — público
+
+Detalhes de um ponto ativo. O administrador também vê inativos.
 
 ### `POST /pickup-points` — ADMINISTRADOR
 
@@ -307,14 +323,15 @@ Mantém todos os campos de `pedido.model.ts` e acrescenta detalhes:
   "clienteId": 7,
   "produtos": ["Organizador de mesa", "Vaso geométrico"],
   "itens": [
-    { "produtoId": 1, "nome": "Organizador de mesa", "quantidade": 1, "precoUnitario": 35, "subtotal": 35 },
-    { "produtoId": 3, "nome": "Vaso geométrico", "quantidade": 1, "precoUnitario": 48, "subtotal": 48 }
+    { "produtoId": 1, "nome": "Organizador de mesa", "quantidade": 1, "precoUnitario": 35, "subtotal": 35, "avaliado": false },
+    { "produtoId": 3, "nome": "Vaso geométrico", "quantidade": 1, "precoUnitario": 48, "subtotal": 48, "avaliado": false }
   ],
 
   "pontoRetirada": "Ponto Centro",
   "pontoRetiradaId": 1,
   "lote": "LOTE-001",
   "loteId": 1,
+  "loteStatus": "EM_FORMACAO",
 
   "subtotal": 83,
   "taxaEntrega": null,
@@ -323,6 +340,9 @@ Mantém todos os campos de `pedido.model.ts` e acrescenta detalhes:
   "taxaDefinitiva": false,
 
   "prazoAceite": "2026-10-25T13:00:00.000Z",
+  "aceitoEm": "2026-10-23T15:20:00.000Z",
+  "motivoRecusa": null,
+  "motivoCancelamento": null,
   "avaliado": false
 }
 ```
@@ -334,8 +354,12 @@ Mantém todos os campos de `pedido.model.ts` e acrescenta detalhes:
 | `taxaEntrega` | `null` até o lote fechar. Depois, o valor definitivo. |
 | `taxaEstimada` | Igual a `taxaEntrega` quando definitiva. Antes disso, a estimativa máxima. |
 | `total` | `subtotal + taxaEstimada` |
-| `lote`, `loteId` | `null` antes do aceite |
+| `taxaEstimada` / `total` | `null` / só o subtotal quando o pedido foi recusado ou cancelado |
+| `lote`, `loteId`, `loteStatus` | `null` antes do aceite |
 | `prazoAceite` | Até quando o produtor pode responder (criação + 48 h) |
+| `motivoRecusa` | Texto do produtor ao recusar, ou `null` |
+| `motivoCancelamento` | `CONSUMIDOR`, `PRAZO_EXPIRADO` (48 h sem resposta) ou `null` |
+| `itens[].avaliado` | Use para mostrar o botão "Avaliar" em cada produto |
 | `avaliado` | `true` se o consumidor já avaliou todos os produtos |
 
 ### `POST /orders` — CONSUMIDOR ou PRODUTOR
@@ -398,7 +422,7 @@ Filtro `?status=PRONTO_PARA_ENTREGA` (aguardando recebimento) ou `?status=DISPON
 
 ### `PATCH /orders/:id/received` — ATENDENTE do ponto
 
-Sem corpo. `PRONTO_PARA_ENTREGA` → `DISPONIVEL_RETIRADA`. Exige o lote fechado.
+Sem corpo. `PRONTO_PARA_ENTREGA` → `DISPONIVEL_RETIRADA`. Exige o lote fechado: com `loteStatus` = `EM_FORMACAO` a resposta é `409 LOTE_EM_FORMACAO`. Use `loteStatus` para desabilitar o botão.
 
 ### `PATCH /orders/:id/picked-up` — ATENDENTE do ponto
 
@@ -422,6 +446,7 @@ Igual a `lote.model.ts`, com a taxa:
   "dataLimite": "2026-10-27T13:00:00.000Z",
   "dataFechamento": "2026-10-22T09:12:00.000Z",
   "quantidadePedidos": 3,
+  "capacidade": 3,
   "custoEntrega": 18,
   "taxaPorPedido": 6,
   "taxaDefinitiva": true,
@@ -473,18 +498,25 @@ O administrador vê os números gerais e o produtor vê só os dele.
 
 ```json
 {
-  "pedidos": { "total": 40, "emAndamento": 12, "retirados": 25, "porStatus": { "ACEITO": 3, "...": 0 } },
+  "pedidos": { "total": 40, "emAndamento": 12, "aguardandoAceitacao": 2, "retirados": 25, "porStatus": { "ACEITO": 3, "...": 0 } },
   "produtos": { "ativos": 18 },
   "pontosAtivos": 2,
-  "lotes": { "emFormacao": 2, "fechados": 5 },
+  "lotes": { "emFormacao": 2, "fechados": 5, "concluidos": 3 },
   "maisVendidos": [ { "produtoId": 1, "nome": "Organizador de mesa", "quantidade": 14 } ]
 }
 ```
 Os 3 KPIs principais: pedidos em andamento, lotes em formação/fechados e produtos mais vendidos.
+- `emAndamento`: pedidos de `AGUARDANDO_ACEITACAO` até `DISPONIVEL_RETIRADA`.
+- `lotes.fechados`: todos os que já saíram de `EM_FORMACAO` (inclui os concluídos).
+- `maisVendidos`: top 5 por quantidade, só pedidos aceitos (recusados e cancelados não contam).
 
 ### `GET /admin/users` — ADMINISTRADOR
 
-Filtros `?perfil=` e `?busca=`. Paginada. Nunca retorna senha.
+Filtros `?perfil=`, `?busca=` (nome ou e-mail) e `?ativo=true|false`. Paginada. Nunca retorna senha.
+
+```json
+{ "id": 8, "nome": "Atendente Centro", "email": "atendente.centro@printhub.local", "perfil": "ATENDENTE", "ativo": true, "criadoEm": "...", "pontoRetiradaId": 1 }
+```
 
 ### `POST /admin/users` — ADMINISTRADOR
 
@@ -492,7 +524,11 @@ Filtros `?perfil=` e `?busca=`. Paginada. Nunca retorna senha.
 
 ### `PATCH /admin/users/:id` — ADMINISTRADOR
 
-Envia `{ "perfil": "...", "ativo": false }`. Usuário inativo não consegue logar.
+Envia qualquer um de `{ "nome": "...", "perfil": "...", "ativo": false }`.
+- Usuário inativo não consegue logar e perde o acesso na hora, mesmo com token válido.
+- A troca de perfil vale na próxima requisição, sem novo login.
+- `409 ALTERACAO_PROPRIA`: o admin não pode desativar nem rebaixar a própria conta.
+- `409 ATENDENTE_VINCULADO`: troque o atendente do ponto antes de mudar o perfil dele.
 
 ### `GET /admin/audit-logs` — ADMINISTRADOR
 
@@ -514,7 +550,20 @@ Senha de todos: `printhub123`
 | CONSUMIDOR | `consumidor.a@printhub.local`, `consumidor.b@printhub.local`, `consumidor.c@printhub.local` |
 | ATENDENTE | `atendente.centro@printhub.local`, `atendente.bairro@printhub.local` |
 
-Os produtos e pontos do seed são os mesmos que já estão nos serviços demonstrativos do frontend.
+Os produtos e pontos do seed são os mesmos que já estão nos serviços demonstrativos do frontend, com os mesmos IDs.
+
+Pedidos criados pelo seed (todos passam pelas regras da API):
+
+| Pedido | Cliente | Ponto | Situação |
+|---|---|---|---|
+| 1 | consumidor.a | Centro | `RETIRADO` e avaliado (LOTE-001) |
+| 2 | consumidor.b | Centro | `DISPONIVEL_RETIRADA` (LOTE-001) |
+| 3 | consumidor.c | Centro | `EM_PRODUCAO` (LOTE-001) |
+| 4 | consumidor.a | Bairro | `ACEITO`, lote em formação (LOTE-002) |
+| 5 | consumidor.b | Centro | `AGUARDANDO_ACEITACAO` (produtor A precisa responder) |
+| 6 | consumidor.c | Bairro | `REJEITADO` |
+
+LOTE-001 está fechado com 3 pedidos de produtores diferentes, a R$ 6,00 cada.
 
 ---
 

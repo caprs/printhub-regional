@@ -44,6 +44,19 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
   next();
 }
 
+// Rota pública que muda de comportamento se houver login (ex.: admin vê inativos).
+// Token vencido não bloqueia: a rota segue como se fosse um visitante.
+export async function optionalAuthenticate(req: Request, res: Response, next: NextFunction) {
+  if (req.headers.authorization) {
+    try {
+      await authenticate(req, res, () => {});
+    } catch (error) {
+      if (!(error instanceof AppError)) throw error;
+    }
+  }
+  next();
+}
+
 export const requireRole =
   (...roles: Role[]) =>
   (req: Request, _res: Response, next: NextFunction) => {

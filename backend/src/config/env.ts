@@ -17,6 +17,12 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+// Impede publicar com o segredo de exemplo, que está no repositório.
+if (parsed.data.NODE_ENV === 'production' && parsed.data.JWT_SECRET.startsWith('troque-por')) {
+  console.error('Defina um JWT_SECRET próprio antes de publicar.');
+  process.exit(1);
+}
+
 export const env = {
   ...parsed.data,
   corsOrigins: parsed.data.CORS_ORIGIN.split(',').map(origin => origin.trim()),

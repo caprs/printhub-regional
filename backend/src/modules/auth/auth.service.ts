@@ -39,9 +39,14 @@ export async function register(input: { nome: string; email: string; senha: stri
   return session(user);
 }
 
+// Usado quando o e-mail não existe, para a resposta levar o mesmo tempo
+// e não revelar quais e-mails estão cadastrados.
+const DUMMY_HASH = bcrypt.hashSync('senha-que-nao-existe', 10);
+
 export async function login(input: { email: string; senha: string }) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
-  const valid = user?.active && (await bcrypt.compare(input.senha, user.passwordHash));
+  const passwordOk = await bcrypt.compare(input.senha, user?.passwordHash ?? DUMMY_HASH);
+  const valid = user?.active && passwordOk;
 
   // Mesma mensagem para e-mail inexistente e senha errada.
   if (!user || !valid) throw new AppError(401, 'CREDENCIAIS_INVALIDAS', 'E-mail ou senha incorretos.');

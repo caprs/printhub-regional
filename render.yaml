@@ -1,0 +1,28 @@
+# Publicação da API no Render (render.com) a partir deste repositório.
+# No painel: New → Blueprint → escolha o repositório. Depois preencha CORS_ORIGIN.
+services:
+  - type: web
+    name: printhub-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    # --include=dev: TypeScript e Prisma CLI são necessários no build.
+    buildCommand: npm ci --include=dev && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: printhub-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      # Endereço público do Angular, ex.: https://printhub-web.onrender.com
+      - key: CORS_ORIGIN
+        sync: false
+
+databases:
+  - name: printhub-db
+    plan: free

@@ -4,7 +4,7 @@ import { toCents, toReais } from '../../lib/money.js';
 import { paginated, skipTake, type Pagination } from '../../lib/pagination.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 
-const withProducer = { producer: { select: { name: true } } } as const;
+const withProducer = { producer: { select: { name: true, active: true } } } as const;
 
 type ProductRow = Prisma.ProductGetPayload<{ include: typeof withProducer }>;
 type Rating = { notaMedia: number | null; totalAvaliacoes: number };
@@ -19,6 +19,7 @@ export type ProductInput = {
   imagem: string;
   estoque: number;
   prazoProducao: number;
+  ativo?: boolean;
 };
 
 export type ProductFilters = Pagination & {
@@ -60,6 +61,7 @@ function toData(input: Partial<ProductInput>) {
     imageUrl: input.imagem,
     availableQuantity: input.estoque,
     productionDays: input.prazoProducao,
+    active: input.ativo,
   };
 }
 
@@ -98,6 +100,8 @@ export function list(filters: ProductFilters) {
   const insensitive = (value: string) => ({ equals: value, mode: 'insensitive' as const });
   const where: Prisma.ProductWhereInput = {
     active: true,
+    // Produtor desativado pelo administrador some do catálogo.
+    producer: { active: true },
     producerId: filters.produtorId,
     category: filters.categoria ? insensitive(filters.categoria) : undefined,
     material: filters.material ? insensitive(filters.material) : undefined,
@@ -121,7 +125,7 @@ export function listByProducer(producerId: number, page: Pagination) {
 
 export async function get(id: number) {
   const product = await prisma.product.findUnique({ where: { id }, include: withProducer });
-  if (!product?.active) throw notFound('Produto não encontrado.');
+  if (!product?.active || !product.producer.active) throw notFound('Produto não encontrado.');
 
   const ratings = await ratingsFor([id]);
   return toProduto(product, ratings.get(id));

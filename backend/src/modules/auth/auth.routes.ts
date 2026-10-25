@@ -7,7 +7,7 @@ import * as service from './auth.service.js';
 const email = z.string().trim().toLowerCase().pipe(z.email());
 const senha = z.string().min(8).max(72);
 
-const registerBody = z.object({
+export const registerBody = z.object({
   nome: z.string().trim().min(3).max(100),
   email,
   senha,
@@ -15,9 +15,9 @@ const registerBody = z.object({
   perfil: z.enum(['CONSUMIDOR', 'PRODUTOR']),
 });
 
-const loginBody = z.object({ email, senha: z.string().min(1) });
-const forgotBody = z.object({ email });
-const resetBody = z.object({ token: z.string().min(1), novaSenha: senha });
+export const loginBody = z.object({ email, senha: z.string().min(1) });
+export const forgotBody = z.object({ email });
+export const resetBody = z.object({ token: z.string().min(1), novaSenha: senha });
 
 export const authRoutes = Router();
 

@@ -19,13 +19,26 @@ export function parse<T extends z.ZodType>(schema: T, data: unknown): z.infer<T>
   return result.data;
 }
 
-// Valor em reais, positivo e com no máximo 2 casas decimais.
-export const reais = () =>
+// Maior inteiro das colunas do PostgreSQL. Acima disso o banco recusaria com erro 500.
+const MAX_INT = 2_147_483_647;
+
+// ID vindo no corpo JSON.
+export const id = () => z.number().int().positive().max(MAX_INT);
+
+// ID vindo na URL ou na query string (texto convertido em número).
+export const queryId = () => z.coerce.number().int().positive().max(MAX_INT);
+
+export const idParam = z.object({ id: queryId() });
+
+// Valor em reais, positivo, com no máximo 2 casas decimais e um teto razoável.
+export const reais = (max: number) =>
   z
     .number()
     .positive()
+    .max(max)
     .refine(value => Math.abs(value * 100 - Math.round(value * 100)) < 1e-6, {
       message: 'Use no máximo 2 casas decimais.',
     });
 
-export const idParam = z.object({ id: z.coerce.number().int().positive() });
+// Só http e https: bloqueia links como javascript: na imagem do produto.
+export const httpUrl = () => z.url({ protocol: /^https?$/ }).max(500);

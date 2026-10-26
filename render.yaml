@@ -1,5 +1,8 @@
-# Publicação da API no Render (render.com) a partir deste repositório.
-# No painel: New → Blueprint → escolha o repositório. Depois preencha CORS_ORIGIN.
+# Publicação no Render (render.com) a partir deste repositório: API + banco + site.
+# No painel: New → Blueprint → escolha o repositório.
+# Se o Render der outro endereço aos serviços (nome já usado), ajuste:
+#   - CORS_ORIGIN abaixo (endereço do site)
+#   - frontend/src/environments/environment.ts (endereço da API)
 services:
   - type: web
     name: printhub-api
@@ -19,9 +22,21 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
-      # Endereço público do Angular, ex.: https://printhub-web.onrender.com
       - key: CORS_ORIGIN
-        sync: false
+        value: https://printhub-web.onrender.com
+
+  # Site Angular como arquivos estáticos: gratuito e não "dorme".
+  - type: web
+    name: printhub-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/frontend/browser
+    routes:
+      # Toda rota (/login, /produto/3...) abre o app; o Angular cuida da navegação.
+      - type: rewrite
+        source: /*
+        destination: /index.csr.html
 
 databases:
   - name: printhub-db

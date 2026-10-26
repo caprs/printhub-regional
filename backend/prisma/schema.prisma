@@ -1,0 +1,232 @@
+// Modelo de dados do PrintHub Regional.
+// Valores em dinheiro são sempre centavos inteiros (sufixo Cents).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CONSUMIDOR
+  PRODUTOR
+  ATENDENTE
+  ADMINISTRADOR
+}
+
+enum OrderStatus {
+  AGUARDANDO_ACEITACAO
+  ACEITO
+  EM_PRODUCAO
+  PRONTO_PARA_ENTREGA
+  DISPONIVEL_RETIRADA
+  RETIRADO
+  REJEITADO
+  CANCELADO
+}
+
+enum BatchStatus {
+  EM_FORMACAO
+  FECHADO
+  AGUARDANDO_PRODUCAO
+  PRONTO_PARA_ENTREGA
+  CONCLUIDO
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  phone        String?
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  products         Product[]
+  ordersAsConsumer Order[]              @relation("OrderConsumer")
+  ordersAsProducer Order[]              @relation("OrderProducer")
+  pickupPoint      PickupPoint?
+  reviews          Review[]
+  statusChanges    OrderStatusHistory[]
+  auditLogs        AuditLog[]
+  resetTokens      PasswordResetToken[]
+
+  @@map("users")
+}
+
+model Product {
+  id                Int      @id @default(autoincrement())
+  producerId        Int      @map("producer_id")
+  name              String
+  description       String
+  category          String
+  material          String
+  color             String?
+  priceCents        Int      @map("price_cents")
+  availableQuantity Int      @map("available_quantity")
+  productionDays    Int      @map("production_days")
+  imageUrl          String   @map("image_url")
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  producer   User        @relation(fields: [producerId], references: [id])
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  @@index([producerId])
+  @@index([category])
+  @@map("products")
+}
+
+model PickupPoint {
+  id                Int      @id @default(autoincrement())
+  name              String
+  address           String
+  district          String
+  city              String
+  responsibleUserId Int?     @unique @map("responsible_user_id")
+  deliveryCostCents Int      @map("delivery_cost_cents")
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  responsible User?   @relation(fields: [responsibleUserId], references: [id])
+  orders      Order[]
+  batches     Batch[]
+
+  @@map("pickup_points")
+}
+
+model Order {
+  id                 Int         @id @default(autoincrement())
+  consumerId         Int         @map("consumer_id")
+  producerId         Int         @map("producer_id")
+  pickupPointId      Int         @map("pickup_point_id")
+  batchId            Int?        @map("batch_id")
+  status             OrderStatus @default(AGUARDANDO_ACEITACAO)
+  productsTotalCents Int         @map("products_total_cents")
+  // Nulo até o lote fechar; depois disso é o valor definitivo.
+  deliveryShareCents Int?        @map("delivery_share_cents")
+  // Ordem de entrada no lote, usada para distribuir a sobra de centavos.
+  batchPosition      Int?        @map("batch_position")
+  rejectionReason    String?     @map("rejection_reason")
+  cancelReason       String?     @map("cancel_reason")
+  acceptDeadline     DateTime    @map("accept_deadline")
+  acceptedAt         DateTime?   @map("accepted_at")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  consumer    User                 @relation("OrderConsumer", fields: [consumerId], references: [id])
+  producer    User                 @relation("OrderProducer", fields: [producerId], references: [id])
+  pickupPoint PickupPoint          @relation(fields: [pickupPointId], references: [id])
+  batch       Batch?               @relation(fields: [batchId], references: [id])
+  items       OrderItem[]
+  history     OrderStatusHistory[]
+  reviews     Review[]
+
+  @@index([consumerId])
+  @@index([producerId])
+  @@index([batchId])
+  @@index([status, acceptDeadline])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             Int @id @default(autoincrement())
+  orderId        Int @map("order_id")
+  productId      Int @map("product_id")
+  quantity       Int
+  // Preço no momento da compra.
+  unitPriceCents Int @map("unit_price_cents")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([orderId, productId])
+  @@map("order_items")
+}
+
+model Batch {
+  id                Int         @id @default(autoincrement())
+  pickupPointId     Int         @map("pickup_point_id")
+  // Copiado do ponto na criação do lote.
+  deliveryCostCents Int         @map("delivery_cost_cents")
+  startDate         DateTime    @default(now()) @map("start_date")
+  deadline          DateTime
+  status            BatchStatus @default(EM_FORMACAO)
+  closedAt          DateTime?   @map("closed_at")
+
+  pickupPoint PickupPoint @relation(fields: [pickupPointId], references: [id])
+  orders      Order[]
+
+  @@index([pickupPointId, status])
+  @@map("batches")
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  consumerId Int      @map("consumer_id")
+  productId  Int      @map("product_id")
+  orderId    Int      @map("order_id")
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  consumer User    @relation(fields: [consumerId], references: [id])
+  product  Product @relation(fields: [productId], references: [id])
+  order    Order   @relation(fields: [orderId], references: [id])
+
+  @@unique([orderId, productId])
+  @@index([productId])
+  @@map("reviews")
+}
+
+model OrderStatusHistory {
+  id          Int          @id @default(autoincrement())
+  orderId     Int          @map("order_id")
+  fromStatus  OrderStatus? @map("from_status")
+  toStatus    OrderStatus  @map("to_status")
+  // Nulo quando a mudança foi automática (prazo de 48 h).
+  changedById Int?         @map("changed_by_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedBy User? @relation(fields: [changedById], references: [id])
+
+  @@index([orderId])
+  @@map("order_status_history")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  action    String
+  entity    String
+  entityId  Int?     @map("entity_id")
+  data      Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_reset_tokens")
+}

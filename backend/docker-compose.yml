@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:17
+    container_name: printhub-db
+    environment:
+      POSTGRES_USER: printhub
+      POSTGRES_PASSWORD: printhub
+      POSTGRES_DB: printhub
+    ports:
+      # 5433 para não conflitar com um PostgreSQL instalado na máquina.
+      - "5433:5432"
+    volumes:
+      - printhub-data:/var/lib/postgresql/data
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+
+volumes:
+  printhub-data:

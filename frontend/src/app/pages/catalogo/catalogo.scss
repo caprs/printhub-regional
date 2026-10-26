@@ -72,9 +72,25 @@
     flex: 1;
   }
 
-  mat-form-field:last-child {
-    width: 250px;
+  mat-form-field.filtro-pequeno {
+    width: 190px;
   }
+}
+
+.esgotado,
+.nota {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.esgotado {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.nota {
+  color: #b45309;
 }
 
 .grid-produtos {
@@ -166,7 +182,7 @@
     flex-direction: column;
     gap: 0;
 
-    mat-form-field:last-child {
+    mat-form-field.filtro-pequeno {
       width: 100%;
     }
   }

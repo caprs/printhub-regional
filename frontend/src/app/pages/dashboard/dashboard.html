@@ -1,21 +1,25 @@
 <section class="dashboard">
     <div class="cabecalho">
         <div>
-            <h1>Dashboard administrativo</h1>
-            <p>Acompanhe os principais indicadores do PrintHub Regional.</p>
+            <h1>{{ ehProdutor ? 'Meus indicadores' : 'Dashboard administrativo' }}</h1>
+            <p>
+                {{ ehProdutor
+                ? 'Acompanhe os pedidos e as vendas dos seus produtos.'
+                : 'Acompanhe os principais indicadores do PrintHub Regional.' }}
+            </p>
         </div>
 
         <span class="identificacao">
-            <mat-icon>admin_panel_settings</mat-icon>
-            Administração
+            <mat-icon>{{ ehProdutor ? 'storefront' : 'admin_panel_settings' }}</mat-icon>
+            {{ ehProdutor ? 'Produtor' : 'Administração' }}
         </span>
     </div>
 
-    <div class="aviso-demo">
-        <mat-icon>info</mat-icon>
-        Indicadores demonstrativos até a integração com a API.
-    </div>
+    @if (erro()) {
+    <p class="alerta erro">{{ erro() }}</p>
+    }
 
+    @if (indicadores(); as dados) {
     <div class="grid-indicadores">
         <mat-card class="indicador">
             <mat-card-content>
@@ -23,8 +27,8 @@
                     <mat-icon>shopping_bag</mat-icon>
                 </div>
                 <span>Total de pedidos</span>
-                <strong>{{ totalPedidos }}</strong>
-                <small>Pedidos de exemplo</small>
+                <strong>{{ dados.pedidos.total }}</strong>
+                <small>{{ dados.pedidos.retirados }} retirados</small>
             </mat-card-content>
         </mat-card>
 
@@ -34,8 +38,8 @@
                     <mat-icon>pending_actions</mat-icon>
                 </div>
                 <span>Pedidos em andamento</span>
-                <strong>{{ pedidosEmAndamento }}</strong>
-                <small>Aguardando conclusão</small>
+                <strong>{{ dados.pedidos.emAndamento }}</strong>
+                <small>{{ dados.pedidos.aguardandoAceitacao }} aguardando aceitação</small>
             </mat-card-content>
         </mat-card>
 
@@ -44,54 +48,85 @@
                 <div class="icone verde">
                     <mat-icon>inventory_2</mat-icon>
                 </div>
-                <span>Produtos cadastrados</span>
-                <strong>{{ totalProdutos() }}</strong>
-                <small>Produtos do catálogo</small>
+                <span>Produtos ativos</span>
+                <strong>{{ dados.produtos.ativos }}</strong>
+                <small>No catálogo</small>
             </mat-card-content>
         </mat-card>
 
         <mat-card class="indicador">
             <mat-card-content>
                 <div class="icone roxo">
-                    <mat-icon>storefront</mat-icon>
+                    <mat-icon>local_shipping</mat-icon>
                 </div>
-                <span>Pontos de retirada</span>
-                <strong>{{ pontosAtivos() }}</strong>
-                <small>Pontos ativos</small>
+                <span>Lotes coletivos</span>
+                <strong>{{ dados.lotes.emFormacao }} / {{ dados.lotes.fechados }}</strong>
+                <small>Em formação / fechados · {{ dados.pontosAtivos }} pontos ativos</small>
             </mat-card-content>
         </mat-card>
     </div>
 
+    <div class="grid-listas">
+        <mat-card class="lista">
+            <mat-card-content>
+                <h2>Produtos mais vendidos</h2>
+                @for (produto of dados.maisVendidos; track produto.produtoId; let i = $index) {
+                <div class="linha-lista">
+                    <span>{{ i + 1 }}. {{ produto.nome }}</span>
+                    <strong>{{ produto.quantidade }} un.</strong>
+                </div>
+                } @empty {
+                <p class="vazio">Nenhuma venda aceita ainda.</p>
+                }
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="lista">
+            <mat-card-content>
+                <h2>Pedidos por status</h2>
+                @for (item of pedidosPorStatus(); track item.nome) {
+                <div class="linha-lista">
+                    <span>{{ item.nome }}</span>
+                    <strong>{{ item.quantidade }}</strong>
+                </div>
+                } @empty {
+                <p class="vazio">Nenhum pedido ainda.</p>
+                }
+            </mat-card-content>
+        </mat-card>
+    </div>
+    } @else if (!erro()) {
+    <p class="carregando">Carregando indicadores...</p>
+    }
+
     <div class="secao-lotes">
         <div class="titulo-secao">
             <div>
-                <h2>Lotes coletivos</h2>
+                <h2>Lotes coletivos recentes</h2>
                 <p>Acompanhe a formação dos lotes de entrega.</p>
             </div>
-
-            <span>{{ totalLotes }} lotes demonstrativos</span>
         </div>
 
         <div class="grid-lotes">
-            @for (lote of lotesDemonstrativos; track lote.codigo) {
+            @for (lote of lotes(); track lote.id) {
             <mat-card class="lote-card">
                 <mat-card-content>
                     <div class="lote-topo">
                         <h3>{{ lote.codigo }}</h3>
                         <span class="status-lote">
-                            {{ lote.status }}
+                            {{ nomeStatusLote(lote.status) }}
                         </span>
                     </div>
 
                     <p class="ponto">
                         <mat-icon>location_on</mat-icon>
-                        {{ lote.ponto }}
+                        {{ lote.pontoRetirada }}
                     </p>
 
                     <div class="dados-lote">
                         <div>
                             <span>Pedidos</span>
-                            <strong>{{ lote.pedidos }} / {{ lote.capacidade }}</strong>
+                            <strong>{{ lote.quantidadePedidos }} / {{ lote.capacidade }}</strong>
                         </div>
 
                         <div>
@@ -101,15 +136,17 @@
                     </div>
 
                     <div class="progresso">
-                        <div class="barra" [style.width.%]="lote.pedidos / lote.capacidade * 100"></div>
+                        <div class="barra" [style.width.%]="lote.quantidadePedidos / lote.capacidade * 100"></div>
                     </div>
 
                     <small>
-                        {{ lote.pedidos }} de {{ lote.capacidade }} pedidos
+                        {{ lote.quantidadePedidos }} de {{ lote.capacidade }} pedidos
                         para atingir o fechamento por quantidade.
                     </small>
                 </mat-card-content>
             </mat-card>
+            } @empty {
+            <p>Nenhum lote ainda.</p>
             }
         </div>
 

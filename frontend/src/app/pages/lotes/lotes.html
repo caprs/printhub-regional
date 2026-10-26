@@ -7,10 +7,13 @@
         </p>
     </div>
 
-    <div class="aviso-demo">
-        <mat-icon>info</mat-icon>
-        Dados demonstrativos. O fechamento automático será realizado pela API.
-    </div>
+    @if (erro()) {
+    <p class="alerta erro">{{ erro() }}</p>
+    }
+
+    @if (carregando()) {
+    <p class="carregando">Carregando lotes...</p>
+    }
 
     <div class="resumo">
         <mat-card>
@@ -54,17 +57,17 @@
                 <div class="informacoes">
                     <div>
                         <span>Data de abertura</span>
-                        <strong>{{ lote.dataAbertura | date:'dd/MM/yyyy':'UTC' }}</strong>
+                        <strong>{{ lote.dataAbertura | date:'dd/MM/yyyy' }}</strong>
                     </div>
 
                     <div>
                         <span>Prazo de formação</span>
-                        <strong>{{ lote.dataLimite | date:'dd/MM/yyyy':'UTC' }}</strong>
+                        <strong>{{ lote.dataLimite | date:'dd/MM/yyyy' }}</strong>
                     </div>
 
                     <div>
                         <span>Pedidos agrupados</span>
-                        <strong>{{ lote.quantidadePedidos }} / 3</strong>
+                        <strong>{{ lote.quantidadePedidos }} / {{ lote.capacidade }}</strong>
                     </div>
 
                     <div>
@@ -74,32 +77,34 @@
                 </div>
 
                 <div class="progresso">
-                    <div class="barra" [style.width.%]="progresso(lote.quantidadePedidos)"></div>
+                    <div class="barra" [style.width.%]="progresso(lote)"></div>
                 </div>
 
                 <p class="estimativa">
-                    @if (lote.status === 'EM_FORMACAO') {
-                    Taxa estimada por pedido:
-                    <strong>
-                        {{ estimativaEntrega(lote.custoEntrega, lote.quantidadePedidos) | currency:'BRL' }}
-                    </strong>
+                    @if (lote.taxaPorPedido === null) {
+                    Nenhum pedido ativo neste lote.
+                    } @else if (lote.taxaDefinitiva) {
+                    Taxa definitiva por pedido:
+                    <strong>{{ lote.taxaPorPedido | currency:'BRL' }}</strong>
                     } @else {
-                    Divisão ilustrativa por pedido:
-                    <strong>
-                        {{ estimativaEntrega(lote.custoEntrega, lote.quantidadePedidos) | currency:'BRL' }}
-                    </strong>
+                    Taxa estimada por pedido (até):
+                    <strong>{{ lote.taxaPorPedido | currency:'BRL' }}</strong>
                     }
                 </p>
 
                 <p class="observacao">
                     @if (lote.status === 'EM_FORMACAO') {
-                    O lote fecha ao atingir 3 pedidos aceitos ou completar 7 dias.
+                    O lote fecha ao atingir {{ lote.capacidade }} pedidos aceitos ou completar 7 dias.
                     } @else {
-                    Lote encerrado para novos pedidos.
+                    Fechado em {{ lote.dataFechamento | date:'dd/MM/yyyy HH:mm' }}. Não recebe novos pedidos.
                     }
                 </p>
             </mat-card-content>
         </mat-card>
+        } @empty {
+        @if (!carregando() && !erro()) {
+        <p>Nenhum lote ainda. O primeiro lote de um ponto abre quando um produtor aceita um pedido para ele.</p>
+        }
         }
     </div>
 </section>

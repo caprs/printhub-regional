@@ -1,111 +1,34 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
-import { isPlatformBrowser } from '@angular/common';
-import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
-import { PontoRetirada } from '../models/ponto-retirada.model';
+import { environment } from '../../../environments/environment';
+import { DadosPonto, PontoRetirada } from '../models/ponto-retirada.model';
+import { parametros } from '../http/parametros';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PontosRetirada {
+  private readonly http = inject(HttpClient);
+  private readonly url = `${environment.apiUrl}/pickup-points`;
 
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly chaveStorage = 'printhub-pontos-retirada';
-
-  private readonly pontos: PontoRetirada[] = [
-    {
-      id: 1,
-      nome: 'Ponto Centro',
-      endereco: 'Endereço demonstrativo — Centro',
-      bairro: 'Centro',
-      cidade: 'Ourinhos - SP',
-      custoEntrega: 18,
-      ativo: true
-    },
-    {
-      id: 2,
-      nome: 'Ponto Bairro',
-      endereco: 'Endereço demonstrativo — Bairro',
-      bairro: 'Bairro demonstrativo',
-      cidade: 'Ourinhos - SP',
-      custoEntrega: 24,
-      ativo: true
-    }
-  ];
-
-  private readonly pontosSignal = signal<PontoRetirada[]>(this.pontos);
-
-  readonly listaPontos = this.pontosSignal.asReadonly();
-
-  constructor() {
-    if (isPlatformBrowser(this.platformId)) {
-      const dadosSalvos = localStorage.getItem(this.chaveStorage);
-
-      if (dadosSalvos) {
-        try {
-          const pontosSalvos = JSON.parse(dadosSalvos);
-
-          if (Array.isArray(pontosSalvos)) {
-            this.pontosSignal.set(pontosSalvos);
-          }
-        } catch {
-          console.warn('Não foi possível recuperar os pontos salvos.');
-        }
-      }
-    }
+  // todos = true só tem efeito para o administrador (inclui inativos).
+  listar(todos = false): Observable<PontoRetirada[]> {
+    return this.http.get<PontoRetirada[]>(this.url, {
+      params: parametros({ todos: todos || undefined })
+    });
   }
 
-  private salvarNoNavegador(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(
-        this.chaveStorage,
-        JSON.stringify(this.pontosSignal())
-      );
-    }
+  buscarPorId(id: number): Observable<PontoRetirada> {
+    return this.http.get<PontoRetirada>(`${this.url}/${id}`);
   }
 
-  listar(): PontoRetirada[] {
-    return this.pontosSignal();
+  cadastrar(dados: DadosPonto): Observable<PontoRetirada> {
+    return this.http.post<PontoRetirada>(this.url, dados);
   }
 
-  listarAtivos(): PontoRetirada[] {
-    return this.pontosSignal().filter(ponto => ponto.ativo);
-  }
-
-  cadastrar(dados: Omit<PontoRetirada, 'id'>): void {
-    const novoId = Math.max(
-      0,
-      ...this.pontosSignal().map(ponto => ponto.id)
-    ) + 1;
-
-    this.pontosSignal.update(pontos => [
-      ...pontos,
-      { ...dados, id: novoId }
-    ]);
-
-    this.salvarNoNavegador();
-  }
-
-  editar(id: number, dados: Partial<PontoRetirada>): void {
-    this.pontosSignal.update(pontos =>
-      pontos.map(ponto =>
-        ponto.id === id
-          ? { ...ponto, ...dados, id: ponto.id }
-          : ponto
-      )
-    );
-
-    this.salvarNoNavegador();
-  }
-
-  alternarStatus(id: number): void {
-    this.pontosSignal.update(pontos =>
-      pontos.map(ponto =>
-        ponto.id === id
-          ? { ...ponto, ativo: !ponto.ativo }
-          : ponto
-      )
-    );
-
-    this.salvarNoNavegador();
+  editar(id: number, dados: Partial<DadosPonto>): Observable<PontoRetirada> {
+    return this.http.patch<PontoRetirada>(`${this.url}/${id}`, dados);
   }
 }

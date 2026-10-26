@@ -24,7 +24,7 @@
             </div>
 
             <span class="quantidade">
-                {{ produtosFiltrados.length }} produtos
+                {{ total() }} produtos
             </span>
         </div>
 
@@ -33,13 +33,14 @@
                 <mat-label>Buscar produtos</mat-label>
                 <mat-icon matPrefix>search</mat-icon>
 
-                <input matInput [(ngModel)]="busca" placeholder="Nome ou material" />
+                <input matInput [ngModel]="busca()" (ngModelChange)="busca.set($event)"
+                    placeholder="Nome, descrição ou material" />
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" class="filtro-pequeno">
                 <mat-label>Categoria</mat-label>
 
-                <mat-select [(ngModel)]="categoriaSelecionada">
+                <mat-select [value]="categoriaSelecionada()" (selectionChange)="categoriaSelecionada.set($event.value)">
                     @for (categoria of categorias; track categoria) {
                     <mat-option [value]="categoria">
                         {{ categoria }}
@@ -47,10 +48,38 @@
                     }
                 </mat-select>
             </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filtro-pequeno">
+                <mat-label>Material</mat-label>
+
+                <mat-select [value]="materialSelecionado()" (selectionChange)="materialSelecionado.set($event.value)">
+                    @for (material of materiais; track material) {
+                    <mat-option [value]="material">{{ material }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filtro-pequeno">
+                <mat-label>Ordenar</mat-label>
+
+                <mat-select [value]="ordenar()" (selectionChange)="ordenar.set($event.value)">
+                    <mat-option value="recentes">Mais recentes</mat-option>
+                    <mat-option value="preco_asc">Menor preço</mat-option>
+                    <mat-option value="preco_desc">Maior preço</mat-option>
+                </mat-select>
+            </mat-form-field>
         </div>
 
+        @if (erro()) {
+        <p class="alerta erro">{{ erro() }}</p>
+        }
+
+        @if (carregando() && produtos().length === 0) {
+        <p class="carregando">Carregando produtos...</p>
+        }
+
         <div class="grid-produtos">
-            @for (produto of produtosFiltrados; track produto.id) {
+            @for (produto of produtos(); track produto.id) {
             <mat-card class="produto-card">
                 <img mat-card-image [src]="produto.imagem" [alt]="produto.nome" />
 
@@ -66,6 +95,12 @@
                     <strong class="preco">
                         {{ produto.preco | currency:'BRL' }}
                     </strong>
+
+                    @if (produto.estoque === 0) {
+                    <span class="esgotado">Esgotado</span>
+                    } @else if (produto.notaMedia !== null) {
+                    <span class="nota">★ {{ produto.notaMedia }} ({{ produto.totalAvaliacoes }})</span>
+                    }
                 </mat-card-content>
 
                 <mat-card-actions>
@@ -75,11 +110,13 @@
                 </mat-card-actions>
             </mat-card>
             } @empty {
+            @if (!carregando() && !erro()) {
             <div class="sem-resultados">
                 <mat-icon>search_off</mat-icon>
                 <h3>Nenhum produto encontrado</h3>
                 <p>Tente pesquisar outro nome ou categoria.</p>
             </div>
+            }
             }
         </div>
     </div>

@@ -11,12 +11,12 @@
         </button>
     </div>
 
-    <p class="aviso-demo">
-        Gerenciamento demonstrativo. As alterações ainda não são salvas no banco de dados.
-    </p>
+    @if (mensagem()) {
+    <p class="alerta sucesso">{{ mensagem() }}</p>
+    }
 
-    @if (mensagem) {
-    <p class="mensagem">{{ mensagem }}</p>
+    @if (erro()) {
+    <p class="alerta erro">{{ erro() }}</p>
     }
 
     @if (formularioAberto) {
@@ -48,24 +48,41 @@
 
             <mat-form-field appearance="outline">
                 <mat-label>Custo de entrega (R$)</mat-label>
-                <input matInput type="number" name="custoEntrega" [(ngModel)]="formulario.custoEntrega" min="0"
-                    step="0.01" required>
+                <input matInput type="number" name="custoEntrega" [(ngModel)]="formulario.custoEntrega" min="0.01"
+                    max="1000" step="0.01" required>
             </mat-form-field>
 
+            <mat-form-field appearance="outline">
+                <mat-label>Atendente responsável</mat-label>
+                <mat-select name="atendenteId" [(ngModel)]="formulario.atendenteId">
+                    <mat-option [value]="null">Nenhum</mat-option>
+                    @for (atendente of atendentesDisponiveis(); track atendente.id) {
+                    <mat-option [value]="atendente.id">{{ atendente.nome }} ({{ atendente.email }})</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            @if (pontoEditandoId !== null) {
             <div class="campo-status">
                 <mat-slide-toggle name="ativo" [(ngModel)]="formulario.ativo">
                     Ponto ativo
                 </mat-slide-toggle>
             </div>
+            }
         </div>
+
+        <p class="dica">
+            Mudar o custo vale para os próximos lotes; lotes já abertos mantêm o custo do dia em que abriram.
+            Atendentes novos são criados em Usuários.
+        </p>
 
         <div class="acoes-formulario">
             <button mat-button type="button" (click)="cancelar()">
                 Cancelar
             </button>
 
-            <button mat-flat-button type="submit" [disabled]="pontoForm.invalid">
-                Salvar ponto
+            <button mat-flat-button type="submit" [disabled]="pontoForm.invalid || salvando()">
+                {{ salvando() ? 'Salvando...' : 'Salvar ponto' }}
             </button>
         </div>
     </form>
@@ -92,6 +109,10 @@
 
                 <p>{{ ponto.endereco }}</p>
                 <p>{{ ponto.bairro }} — {{ ponto.cidade }}</p>
+                <p>Atendente: {{ ponto.atendente ?? 'não definido' }}</p>
+                @if (ponto.loteAberto; as lote) {
+                <p>{{ lote.codigo }} em formação ({{ lote.quantidadePedidos }}/3)</p>
+                }
 
                 <div class="custo">
                     <span>Custo de entrega</span>
@@ -111,7 +132,9 @@
             </mat-card-actions>
         </mat-card>
         } @empty {
+        @if (!carregando()) {
         <p>Nenhum ponto de retirada cadastrado.</p>
+        }
         }
     </div>
 </section>

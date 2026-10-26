@@ -1,5 +1,5 @@
 
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -8,10 +8,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { PontosRetirada } from '../../core/services/pontos-retirada';
-import { PontoRetirada } from '../../core/models/ponto-retirada.model';
+import { Administracao } from '../../core/services/administracao';
+import { DadosPonto, PontoRetirada } from '../../core/models/ponto-retirada.model';
+import { UsuarioAdmin } from '../../core/models/usuario.model';
+import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
   selector: 'app-gerenciar-pontos',
@@ -23,6 +27,7 @@ import { PontoRetirada } from '../../core/models/ponto-retirada.model';
     MatFormFieldModule,
     MatInputModule,
     MatCardModule,
+    MatSelectModule,
     MatSlideToggleModule
   ],
   templateUrl: './gerenciar-pontos.html',
@@ -30,32 +35,65 @@ import { PontoRetirada } from '../../core/models/ponto-retirada.model';
 })
 export class GerenciarPontos {
   private pontosService = inject(PontosRetirada);
+  private administracao = inject(Administracao);
 
-  readonly pontos = computed(() =>
-    this.pontosService.listaPontos()
-  );
+  readonly pontos = signal<PontoRetirada[]>([]);
+  readonly atendentes = signal<UsuarioAdmin[]>([]);
+  readonly carregando = signal(true);
+  readonly salvando = signal(false);
+  readonly mensagem = signal('');
+  readonly erro = signal('');
 
   formularioAberto = false;
   pontoEditandoId: number | null = null;
-  mensagem = '';
 
   formulario = this.formularioVazio();
 
-  private formularioVazio() {
+  constructor() {
+    this.carregar();
+
+    this.administracao.listarUsuarios({ perfil: 'ATENDENTE', ativo: true }).subscribe({
+      next: resposta => this.atendentes.set(resposta.data)
+    });
+  }
+
+  private formularioVazio(): DadosPonto {
     return {
       nome: '',
       endereco: '',
       bairro: '',
       cidade: '',
       custoEntrega: 0,
+      atendenteId: null,
       ativo: true
     };
+  }
+
+  carregar(): void {
+    this.pontosService.listar(true).subscribe({
+      next: pontos => {
+        this.pontos.set(pontos);
+        this.carregando.set(false);
+      },
+      error: erro => {
+        this.carregando.set(false);
+        this.erro.set(mensagemErro(erro, 'Não foi possível carregar os pontos.'));
+      }
+    });
+  }
+
+  // Atendentes livres, mais o que já cuida do ponto em edição.
+  atendentesDisponiveis(): UsuarioAdmin[] {
+    return this.atendentes().filter(
+      atendente => atendente.pontoRetiradaId === null || atendente.pontoRetiradaId === this.pontoEditandoId
+    );
   }
 
   novoPonto(): void {
     this.formulario = this.formularioVazio();
     this.pontoEditandoId = null;
-    this.mensagem = '';
+    this.mensagem.set('');
+    this.erro.set('');
     this.formularioAberto = true;
   }
 
@@ -68,10 +106,12 @@ export class GerenciarPontos {
       bairro: ponto.bairro,
       cidade: ponto.cidade,
       custoEntrega: ponto.custoEntrega,
+      atendenteId: ponto.atendenteId,
       ativo: ponto.ativo
     };
 
-    this.mensagem = '';
+    this.mensagem.set('');
+    this.erro.set('');
     this.formularioAberto = true;
   }
 
@@ -81,7 +121,7 @@ export class GerenciarPontos {
   }
 
   salvar(): void {
-    const dados = this.formulario;
+    const dados: DadosPonto = { ...this.formulario, custoEntrega: Number(this.formulario.custoEntrega) };
 
     if (
       !dados.nome.trim() ||
@@ -89,29 +129,47 @@ export class GerenciarPontos {
       !dados.bairro.trim() ||
       !dados.cidade.trim() ||
       !Number.isFinite(dados.custoEntrega) ||
-      dados.custoEntrega < 0
+      dados.custoEntrega <= 0
     ) {
-      this.mensagem = 'Preencha os campos corretamente.';
+      this.erro.set('Preencha os campos corretamente. O custo de entrega deve ser maior que zero.');
       return;
     }
 
-    if (this.pontoEditandoId !== null) {
-      this.pontosService.editar(this.pontoEditandoId, dados);
-      this.mensagem = 'Ponto atualizado com sucesso!';
-    } else {
-      this.pontosService.cadastrar(dados);
-      this.mensagem = 'Ponto cadastrado com sucesso!';
-    }
+    const editando = this.pontoEditandoId !== null;
+    // No cadastro, o ponto nasce ativo; "ativo" só é enviado na edição.
+    const { ativo, ...semAtivo } = dados;
+    const requisicao = editando
+      ? this.pontosService.editar(this.pontoEditandoId!, dados)
+      : this.pontosService.cadastrar(semAtivo);
 
-    this.formularioAberto = false;
-    this.pontoEditandoId = null;
+    this.salvando.set(true);
+    this.erro.set('');
+
+    requisicao.subscribe({
+      next: () => {
+        this.salvando.set(false);
+        this.mensagem.set(editando ? 'Ponto atualizado com sucesso!' : 'Ponto cadastrado com sucesso!');
+        this.formularioAberto = false;
+        this.pontoEditandoId = null;
+        this.carregar();
+        this.administracao.listarUsuarios({ perfil: 'ATENDENTE', ativo: true }).subscribe({
+          next: resposta => this.atendentes.set(resposta.data)
+        });
+      },
+      error: erro => {
+        this.salvando.set(false);
+        this.erro.set(mensagemErro(erro, 'Não foi possível salvar o ponto.'));
+      }
+    });
   }
 
   alternarStatus(ponto: PontoRetirada): void {
-    this.pontosService.alternarStatus(ponto.id);
-
-    this.mensagem = ponto.ativo
-      ? 'Ponto desativado com sucesso!'
-      : 'Ponto ativado com sucesso!';
+    this.pontosService.editar(ponto.id, { ativo: !ponto.ativo }).subscribe({
+      next: () => {
+        this.mensagem.set(ponto.ativo ? 'Ponto desativado com sucesso!' : 'Ponto ativado com sucesso!');
+        this.carregar();
+      },
+      error: erro => this.erro.set(mensagemErro(erro))
+    });
   }
 }

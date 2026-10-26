@@ -5,28 +5,30 @@
             <p>Gerencie o recebimento e a retirada dos pedidos.</p>
         </div>
 
+        @if (nomePonto()) {
         <div class="identificacao">
             <mat-icon>storefront</mat-icon>
-            <span>{{ nomePonto }}</span>
+            <span>{{ nomePonto() }}</span>
         </div>
+        }
     </div>
 
-    <div class="aviso-demo">
-        <mat-icon>info</mat-icon>
-        <span>
-            Pedidos demonstrativos. O vínculo do atendente ao ponto
-            será validado pela API.
-        </span>
-    </div>
+    @if (mensagem()) {
+    <p class="alerta sucesso">{{ mensagem() }}</p>
+    }
 
-    @if (mensagem) {
-    <p class="mensagem">{{ mensagem }}</p>
+    @if (erro()) {
+    <p class="alerta erro">{{ erro() }}</p>
     }
 
     <div class="titulo-lista">
         <h2>Pedidos do ponto</h2>
         <span>{{ pedidos().length }} pedidos</span>
     </div>
+
+    @if (carregando()) {
+    <p class="carregando">Carregando pedidos...</p>
+    }
 
     <div class="lista-pedidos">
         @for (pedido of pedidos(); track pedido.id) {
@@ -46,6 +48,9 @@
                 <div>
                     <span>Consumidor</span>
                     <strong>{{ pedido.cliente }}</strong>
+                    @if (pedido.clienteTelefone) {
+                    <p>{{ pedido.clienteTelefone }}</p>
+                    }
                 </div>
 
                 <div>
@@ -55,34 +60,36 @@
 
                 <div>
                     <span>Produtos</span>
-                    @for (produto of pedido.produtos; track $index) {
-                    <p>{{ produto }}</p>
+                    @for (item of pedido.itens; track item.produtoId) {
+                    <p>{{ item.quantidade }}× {{ item.nome }}</p>
                     }
                 </div>
 
                 <div>
-                    <span>Ponto de retirada</span>
-                    <strong>{{ nomePonto }}</strong>
+                    <span>Cobrar na retirada</span>
+                    <strong>{{ pedido.total | currency:'BRL' }}</strong>
+                    <p>Produtos {{ pedido.subtotal | currency:'BRL' }} + entrega {{ (pedido.taxaEntrega ?? pedido.taxaEstimada) | currency:'BRL' }}</p>
                 </div>
             </div>
 
             <div class="acoes">
                 @switch (pedido.status) {
-                @case ('AGUARDANDO_RECEBIMENTO') {
-                <button mat-flat-button (click)="atualizarStatus(
-                  pedido.id,
-                  'DISPONIVEL_RETIRADA'
-                )">
+                @case ('PRONTO_PARA_ENTREGA') {
+                @if (pedido.loteStatus === 'EM_FORMACAO') {
+                <span class="aguardando">
+                    <mat-icon>schedule</mat-icon>
+                    O {{ pedido.lote }} ainda está em formação. O recebimento é liberado quando ele fechar.
+                </span>
+                } @else {
+                <button mat-flat-button (click)="confirmarRecebimento(pedido)" [disabled]="processandoId() === pedido.id">
                     <mat-icon>inventory_2</mat-icon>
                     Confirmar recebimento
                 </button>
                 }
+                }
 
                 @case ('DISPONIVEL_RETIRADA') {
-                <button mat-flat-button (click)="atualizarStatus(
-                  pedido.id,
-                  'RETIRADO'
-                )">
+                <button mat-flat-button (click)="confirmarRetirada(pedido)" [disabled]="processandoId() === pedido.id">
                     <mat-icon>check_circle</mat-icon>
                     Confirmar retirada
                 </button>
@@ -98,10 +105,12 @@
             </div>
         </article>
         } @empty {
+        @if (!carregando()) {
         <div class="sem-pedidos">
             <h3>Nenhum pedido encontrado</h3>
-            <p>Não existem pedidos destinados a este ponto.</p>
+            <p>Os pedidos aparecem aqui quando o produtor finaliza a produção.</p>
         </div>
+        }
         }
     </div>
 </section>

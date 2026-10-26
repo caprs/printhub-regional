@@ -1,0 +1,43 @@
+# Publicação no Render (render.com) a partir deste repositório: API + banco + site.
+# No painel: New → Blueprint → escolha o repositório.
+# Se o Render der outro endereço aos serviços (nome já usado), ajuste:
+#   - CORS_ORIGIN abaixo (endereço do site)
+#   - frontend/src/environments/environment.ts (endereço da API)
+services:
+  - type: web
+    name: printhub-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    # --include=dev: TypeScript e Prisma CLI são necessários no build.
+    buildCommand: npm ci --include=dev && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: printhub-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://printhub-web.onrender.com
+
+  # Site Angular como arquivos estáticos: gratuito e não "dorme".
+  - type: web
+    name: printhub-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/frontend/browser
+    routes:
+      # Toda rota (/login, /produto/3...) abre o app; o Angular cuida da navegação.
+      - type: rewrite
+        source: /*
+        destination: /index.csr.html
+
+databases:
+  - name: printhub-db
+    plan: free

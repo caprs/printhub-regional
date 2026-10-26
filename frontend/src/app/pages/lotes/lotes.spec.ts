@@ -1,6 +1,9 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Lotes } from './lotes';
+import { LotesPage as Lotes } from './lotes';
 
 describe('Lotes', () => {
   let component: Lotes;
@@ -9,6 +12,7 @@ describe('Lotes', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Lotes],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Lotes);

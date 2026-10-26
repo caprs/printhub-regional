@@ -1,110 +1,53 @@
-import { Injectable, signal } from '@angular/core';
-import { Produto } from '../models/produto.model';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../../environments/environment';
+import { Paginado } from '../models/api.model';
+import { Avaliacao } from '../models/dashboard.model';
+import { DadosProduto, FiltrosProduto, Produto } from '../models/produto.model';
+import { parametros } from '../http/parametros';
+
+export type AvaliacoesProduto = Paginado<Avaliacao> & {
+  resumo: { notaMedia: number | null; totalAvaliacoes: number };
+};
 
 @Injectable({
   providedIn: 'root'
 })
 export class Produtos {
-  private readonly produtos: Produto[] = [
-    {
-      id: 1,
-      produtorId: 1,
-      nome: 'Organizador de mesa',
-      descricao: 'Organizador impresso em 3D para guardar objetos e acessórios de escritório.',
-      categoria: 'Organização',
-      material: 'PLA',
-      preco: 35,
-      produtor: 'Produtor Exemplo A',
-      imagem: 'https://placehold.co/600x400/e8eefc/2563eb?text=Organizador+3D',
-      estoque: 10,
-      prazoProducao: 3
-    },
-    {
-      id: 2,
-      produtorId: 2,
-      nome: 'Suporte para celular',
-      descricao: 'Suporte para celular produzido em impressão 3D, ideal para mesas e escritórios.',
-      categoria: 'Acessórios',
-      material: 'PLA',
-      preco: 22,
-      produtor: 'Produtor Exemplo B',
-      imagem: 'https://placehold.co/600x400/e8eefc/2563eb?text=Suporte+3D',
-      estoque: 15,
-      prazoProducao: 2
-    },
-    {
-      id: 3,
-      produtorId: 1,
-      nome: 'Vaso geométrico',
-      descricao: 'Vaso decorativo com formato geométrico, produzido por impressão 3D.',
-      categoria: 'Decoração',
-      material: 'PETG',
-      preco: 48,
-      produtor: 'Produtor Exemplo A',
-      imagem: 'https://placehold.co/600x400/e8eefc/2563eb?text=Vaso+3D',
-      estoque: 8,
-      prazoProducao: 4
-    },
-    {
-      id: 4,
-      produtorId: 3,
-      nome: 'Porta-chaves de parede',
-      descricao: 'Porta-chaves compacto para organizar chaves e pequenos acessórios.',
-      categoria: 'Utilidades',
-      material: 'PLA',
-      preco: 29.90,
-      produtor: 'Produtor Exemplo C',
-      imagem: 'https://placehold.co/600x400/e8eefc/2563eb?text=Porta-chaves',
-      estoque: 12,
-      prazoProducao: 2
-    }
-  ];
+  private readonly http = inject(HttpClient);
+  private readonly url = `${environment.apiUrl}/products`;
 
-  
+  listar(filtros: FiltrosProduto = {}): Observable<Paginado<Produto>> {
+    return this.http.get<Paginado<Produto>>(this.url, { params: parametros(filtros) });
+  }
 
- private readonly produtosSignal = signal<Produto[]>(this.produtos);
+  buscarPorId(id: number): Observable<Produto> {
+    return this.http.get<Produto>(`${this.url}/${id}`);
+  }
 
-readonly listaProdutos = this.produtosSignal.asReadonly();
+  // Produtos do produtor logado, inclusive os desativados.
+  listarMeus(): Observable<Paginado<Produto>> {
+    return this.http.get<Paginado<Produto>>(`${environment.apiUrl}/producers/me/products`, {
+      params: parametros({ porPagina: 50 })
+    });
+  }
 
-listar(): Produto[] {
-  return this.produtosSignal();
-}
+  cadastrar(dados: DadosProduto): Observable<Produto> {
+    return this.http.post<Produto>(this.url, dados);
+  }
 
-buscarPorId(id: number): Produto | undefined {
-  return this.produtosSignal().find(produto => produto.id === id);
-}
+  editar(id: number, dados: Partial<DadosProduto> & { ativo?: boolean }): Observable<Produto> {
+    return this.http.patch<Produto>(`${this.url}/${id}`, dados);
+  }
 
-listarPorProdutor(produtorId: number): Produto[] {
-  return this.produtosSignal().filter(
-    produto => produto.produtorId === produtorId
-  );
-}
+  // A API desativa o produto (ele pode estar em pedidos antigos).
+  excluir(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${id}`);
+  }
 
-cadastrar(produto: Omit<Produto, 'id'>): void {
-  const novoId = Math.max(
-    0,
-    ...this.produtosSignal().map(item => item.id)
-  ) + 1;
-
-  this.produtosSignal.update(produtos => [
-    ...produtos,
-    { ...produto, id: novoId }
-  ]);
-}
-
-editar(id: number, dados: Partial<Produto>): void {
-  this.produtosSignal.update(produtos =>
-    produtos.map(produto =>
-      produto.id === id
-        ? { ...produto, ...dados, id: produto.id, produtorId: produto.produtorId }
-        : produto
-    )
-  );
-}
-
-excluir(id: number): void {
-  this.produtosSignal.update(produtos =>
-    produtos.filter(produto => produto.id !== id)
-  );
-}
+  avaliacoes(id: number): Observable<AvaliacoesProduto> {
+    return this.http.get<AvaliacoesProduto>(`${this.url}/${id}/reviews`);
+  }
 }

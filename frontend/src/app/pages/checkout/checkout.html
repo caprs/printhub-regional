@@ -9,21 +9,40 @@
         Escolha onde deseja retirar seus produtos.
     </p>
 
+    @if (erro()) {
+    <p class="alerta erro">{{ erro() }}</p>
+    }
+
     @if (carrinho.itens().length > 0) {
     <div class="layout-checkout">
         <div class="pontos">
             <h2>Selecione um ponto de retirada</h2>
 
-            <mat-radio-group [value]="pontoSelecionadoId" (change)="selecionarPonto($event.value)">
-                @for (ponto of pontos; track ponto.id) {
+            @if (carregando()) {
+            <p class="carregando">Carregando pontos...</p>
+            }
+
+            <mat-radio-group [value]="pontoSelecionadoId()" (change)="selecionarPonto($event.value)">
+                @for (ponto of pontos(); track ponto.id) {
                 <div class="ponto">
                     <mat-radio-button [value]="ponto.id">
                         <strong>{{ ponto.nome }}</strong>
                     </mat-radio-button>
 
-                    <p>{{ ponto.endereco }}</p>
+                    <p>{{ ponto.endereco }} — {{ ponto.bairro }}</p>
                     <p>{{ ponto.cidade }}</p>
+                    <p class="lote-info">
+                        @if (ponto.loteAberto; as lote) {
+                        {{ lote.codigo }} em formação: {{ lote.quantidadePedidos }} de 3 pedidos
+                        } @else {
+                        Seu pedido, quando aceito, abre um novo lote neste ponto
+                        }
+                    </p>
                 </div>
+                } @empty {
+                @if (!carregando()) {
+                <p>Nenhum ponto de retirada disponível no momento.</p>
+                }
                 }
             </mat-radio-group>
         </div>
@@ -41,19 +60,28 @@
             <div class="linha">
                 <span>Entrega compartilhada</span>
                 <strong>
-                    @if (pontoSelecionado) {
-                    {{ taxaEstimada | currency:'BRL' }}
+                    @if (pontoSelecionado(); as ponto) {
+                    até {{ ponto.taxaEstimada.maxima | currency:'BRL' }}
                     } @else {
                     A definir
                     }
                 </strong>
             </div>
 
+            @if (pontoSelecionado(); as ponto) {
+            @if (ponto.taxaEstimada.minima < ponto.taxaEstimada.maxima) {
+            <p class="aviso">
+                Pode cair para {{ ponto.taxaEstimada.minima | currency:'BRL' }}
+                se o lote completar 3 pedidos.
+            </p>
+            }
+            }
+
             <div class="total">
                 <span>Total estimado</span>
                 <strong>
-                    @if (pontoSelecionado) {
-                    {{ totalEstimado | currency:'BRL' }}
+                    @if (pontoSelecionado()) {
+                    {{ totalEstimado() | currency:'BRL' }}
                     } @else {
                     A definir
                     }
@@ -66,23 +94,32 @@
                 realizado presencialmente na retirada.
             </p>
 
-            <button mat-flat-button [disabled]="!pontoSelecionado" (click)="mostrarConfirmacao()">
+            <button mat-flat-button [disabled]="!pontoSelecionado()" (click)="mostrarConfirmacao()">
                 Revisar pedido
             </button>
         </aside>
     </div>
 
-    @if (confirmacaoVisivel) {
+    @if (confirmacaoVisivel()) {
     <div class="confirmacao">
         <mat-icon>info</mat-icon>
 
         <div>
-            <h3>Pedido pronto para integração</h3>
+            <h3>Confirme seu pedido</h3>
             <p>
-                Você selecionou {{ pontoSelecionado?.nome }}.
-                O envio real do pedido será habilitado
-                quando a API estiver conectada.
+                {{ carrinho.quantidadeTotal() }} item(ns) de {{ carrinho.itens()[0].produto.produtor }},
+                retirada no {{ pontoSelecionado()?.nome }}.
+                O produtor tem até 48 horas para aceitar.
             </p>
+
+            <div class="acoes-confirmacao">
+                <button mat-flat-button (click)="confirmarPedido()" [disabled]="enviando()">
+                    {{ enviando() ? 'Enviando...' : 'Confirmar pedido' }}
+                </button>
+                <button mat-button (click)="confirmacaoVisivel.set(false)" [disabled]="enviando()">
+                    Voltar
+                </button>
+            </div>
         </div>
     </div>
     }

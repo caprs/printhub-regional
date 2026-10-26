@@ -1,7 +1,8 @@
 
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,11 +12,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 
 import { Produtos } from '../../core/services/produtos';
-import { Produto } from '../../core/models/produto.model';
-import {
-  PedidosProdutor,
-  StatusPedidoProdutor
-} from '../../core/services/pedidos-produtor';
+import { Pedidos } from '../../core/services/pedidos';
+import { DadosProduto, Produto } from '../../core/models/produto.model';
+import { NOMES_STATUS_PEDIDO, Pedido, StatusPedido } from '../../core/models/pedido.model';
+import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
   selector: 'app-painel-produtor',
@@ -34,21 +34,21 @@ import {
 })
 export class PainelProdutor {
   private produtosService = inject(Produtos);
+  private pedidosService = inject(Pedidos);
 
-  // Produtor demonstrativo até implementarmos a autenticação.
-  readonly produtorId = 1;
-  readonly produtorNome = 'Produtor Exemplo A';
-
-  readonly meusProdutos = computed(() =>
-    this.produtosService.listaProdutos().filter(
-      produto => produto.produtorId === this.produtorId
-    )
-  );
+  readonly meusProdutos = signal<Produto[]>([]);
+  readonly pedidosRecebidos = signal<Pedido[]>([]);
+  readonly carregando = signal(true);
 
   readonly formularioAberto = signal(false);
+  readonly salvando = signal(false);
+  readonly mensagem = signal('');
+  readonly erro = signal('');
+  readonly mensagemPedido = signal('');
+  readonly erroPedido = signal('');
+  readonly processandoPedidoId = signal<number | null>(null);
 
   produtoEditandoId: number | null = null;
-  mensagem = '';
 
   categorias = [
     'Organização',
@@ -59,12 +59,18 @@ export class PainelProdutor {
 
   formulario = this.formularioVazio();
 
-  private formularioVazio() {
+  constructor() {
+    this.carregarProdutos();
+    this.carregarPedidos();
+  }
+
+  private formularioVazio(): DadosProduto {
     return {
       nome: '',
       descricao: '',
       categoria: 'Organização',
       material: 'PLA',
+      cor: null,
       preco: 0,
       estoque: 0,
       prazoProducao: 1,
@@ -72,10 +78,31 @@ export class PainelProdutor {
     };
   }
 
+  carregarProdutos(): void {
+    this.produtosService.listarMeus().subscribe({
+      next: resposta => {
+        this.meusProdutos.set(resposta.data);
+        this.carregando.set(false);
+      },
+      error: erro => {
+        this.carregando.set(false);
+        this.erro.set(mensagemErro(erro, 'Não foi possível carregar seus produtos.'));
+      }
+    });
+  }
+
+  carregarPedidos(): void {
+    this.pedidosService.listarDoProdutor().subscribe({
+      next: resposta => this.pedidosRecebidos.set(resposta.data),
+      error: erro => this.erroPedido.set(mensagemErro(erro, 'Não foi possível carregar os pedidos.'))
+    });
+  }
+
   novoProduto(): void {
     this.produtoEditandoId = null;
     this.formulario = this.formularioVazio();
-    this.mensagem = '';
+    this.mensagem.set('');
+    this.erro.set('');
     this.formularioAberto.set(true);
   }
 
@@ -87,13 +114,15 @@ export class PainelProdutor {
       descricao: produto.descricao,
       categoria: produto.categoria,
       material: produto.material,
+      cor: produto.cor,
       preco: produto.preco,
       estoque: produto.estoque,
       prazoProducao: produto.prazoProducao,
       imagem: produto.imagem
     };
 
-    this.mensagem = '';
+    this.mensagem.set('');
+    this.erro.set('');
     this.formularioAberto.set(true);
   }
 
@@ -103,13 +132,24 @@ export class PainelProdutor {
   }
 
   salvar(): void {
-    const dados = this.formulario;
+    const dados: DadosProduto = {
+      ...this.formulario,
+      nome: this.formulario.nome.trim(),
+      descricao: this.formulario.descricao.trim(),
+      material: this.formulario.material.trim(),
+      imagem: this.formulario.imagem.trim(),
+      cor: this.formulario.cor?.trim() || null,
+      preco: Number(this.formulario.preco),
+      estoque: Number(this.formulario.estoque),
+      prazoProducao: Number(this.formulario.prazoProducao)
+    };
 
+    // RN01: preço, prazo, material e imagem obrigatórios (a API confere de novo).
     if (
-      !dados.nome.trim() ||
-      !dados.descricao.trim() ||
-      !dados.imagem.trim() ||
-      !dados.material.trim() ||
+      !dados.nome ||
+      !dados.descricao ||
+      !dados.imagem ||
+      !dados.material ||
       !dados.categoria ||
       !Number.isFinite(dados.preco) ||
       dados.preco <= 0 ||
@@ -118,76 +158,106 @@ export class PainelProdutor {
       !Number.isInteger(dados.prazoProducao) ||
       dados.prazoProducao < 1
     ) {
-      this.mensagem = 'Preencha os campos corretamente.';
+      this.erro.set('Preencha os campos corretamente.');
       return;
     }
 
-    if (this.produtoEditandoId !== null) {
-      this.produtosService.editar(this.produtoEditandoId, dados);
-      this.mensagem = 'Produto atualizado com sucesso!';
-    } else {
-      this.produtosService.cadastrar({
-        ...dados,
-        produtorId: this.produtorId,
-        produtor: this.produtorNome
-      });
+    const editando = this.produtoEditandoId !== null;
+    const requisicao = editando
+      ? this.produtosService.editar(this.produtoEditandoId!, dados)
+      : this.produtosService.cadastrar(dados);
 
-      this.mensagem = 'Produto cadastrado com sucesso!';
-    }
+    this.salvando.set(true);
+    this.erro.set('');
 
-    this.produtoEditandoId = null;
-    this.formularioAberto.set(false);
+    requisicao.subscribe({
+      next: () => {
+        this.salvando.set(false);
+        this.mensagem.set(editando ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+        this.produtoEditandoId = null;
+        this.formularioAberto.set(false);
+        this.carregarProdutos();
+      },
+      error: erro => {
+        this.salvando.set(false);
+        this.erro.set(mensagemErro(erro, 'Não foi possível salvar o produto.'));
+      }
+    });
   }
 
   excluirProduto(produto: Produto): void {
     const confirmou = confirm(
-      `Deseja realmente excluir "${produto.nome}"?`
+      `Deseja realmente excluir "${produto.nome}"? Ele sai do catálogo, mas os pedidos antigos continuam.`
     );
 
     if (!confirmou) {
       return;
     }
 
-    this.produtosService.excluir(produto.id);
-    this.mensagem = 'Produto excluído com sucesso!';
+    this.produtosService.excluir(produto.id).subscribe({
+      next: () => {
+        this.mensagem.set('Produto excluído do catálogo.');
+        this.carregarProdutos();
+      },
+      error: erro => this.erro.set(mensagemErro(erro))
+    });
   }
 
-  
-private pedidosProdutorService = inject(PedidosProdutor);
+  reativarProduto(produto: Produto): void {
+    this.produtosService.editar(produto.id, { ativo: true }).subscribe({
+      next: () => {
+        this.mensagem.set(`"${produto.nome}" voltou ao catálogo.`);
+        this.carregarProdutos();
+      },
+      error: erro => this.erro.set(mensagemErro(erro))
+    });
+  }
 
-readonly pedidosRecebidos = computed(() =>
-  this.pedidosProdutorService.pedidos().filter(
-    pedido => pedido.produtorId === this.produtorId
-  )
-);
+  nomeStatusPedido(status: StatusPedido): string {
+    return NOMES_STATUS_PEDIDO[status];
+  }
 
-mensagemPedido = '';
+  aceitar(pedido: Pedido): void {
+    this.executarPedido(pedido, this.pedidosService.aceitar(pedido.id), 'Pedido aceito e incluído no lote.');
+  }
 
-nomeStatusPedido(status: StatusPedidoProdutor): string {
-  const nomes: Record<StatusPedidoProdutor, string> = {
-    AGUARDANDO_ACEITACAO: 'Aguardando aceitação',
-    ACEITO: 'Aceito',
-    EM_PRODUCAO: 'Em produção',
-    PRONTO_PARA_ENTREGA: 'Pronto para entrega',
-    REJEITADO: 'Rejeitado'
-  };
+  rejeitar(pedido: Pedido): void {
+    const motivo = prompt('Motivo da recusa (opcional):');
 
-  return nomes[status];
-}
+    // null = clicou em Cancelar na janela.
+    if (motivo === null) {
+      return;
+    }
 
-atualizarStatusPedido(
-  pedidoId: number,
-  novoStatus: StatusPedidoProdutor
-): void {
-  const atualizado = this.pedidosProdutorService.atualizarStatus(
-    pedidoId,
-    this.produtorId,
-    novoStatus
-  );
+    this.executarPedido(pedido, this.pedidosService.rejeitar(pedido.id, motivo), 'Pedido recusado. O estoque foi devolvido.');
+  }
 
-  this.mensagemPedido = atualizado
-    ? 'Status do pedido atualizado com sucesso!'
-    : 'Não foi possível atualizar o pedido.';
-}
+  avancar(pedido: Pedido, status: 'EM_PRODUCAO' | 'PRONTO_PARA_ENTREGA'): void {
+    const texto = status === 'EM_PRODUCAO'
+      ? 'Produção iniciada.'
+      : 'Produção finalizada. Encaminhe o pedido ao ponto de retirada.';
 
+    this.executarPedido(pedido, this.pedidosService.atualizarStatus(pedido.id, status), texto);
+  }
+
+  private executarPedido(pedido: Pedido, acao: Observable<Pedido>, sucesso: string): void {
+    this.processandoPedidoId.set(pedido.id);
+    this.mensagemPedido.set('');
+    this.erroPedido.set('');
+
+    acao.subscribe({
+      next: () => {
+        this.processandoPedidoId.set(null);
+        this.mensagemPedido.set(`Pedido #${pedido.id}: ${sucesso}`);
+        // Recarrega: o aceite pode ter fechado o lote e mudado a taxa de outros pedidos.
+        this.carregarPedidos();
+        this.carregarProdutos();
+      },
+      error: erro => {
+        this.processandoPedidoId.set(null);
+        this.erroPedido.set(mensagemErro(erro));
+        this.carregarPedidos();
+      }
+    });
+  }
 }

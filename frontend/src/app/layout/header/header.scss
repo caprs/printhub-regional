@@ -49,8 +49,57 @@
   text-decoration: none;
   font-weight: 500;
 
-  &:hover {
+  &:hover,
+  &.ativo {
     color: #2563eb;
+  }
+}
+
+.navigation {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.botao-carrinho {
+  position: relative;
+}
+
+.contador {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.usuario {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  text-align: right;
+
+  strong {
+    color: #172033;
+    font-size: 14px;
+  }
+
+  small {
+    color: #64748b;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 520px) {
+  .usuario {
+    display: none;
   }
 }
 

@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { exigirPerfil } from './core/guards/perfil.guard';
+
 export const routes: Routes = [
   {
     path: '',
@@ -20,6 +22,12 @@ export const routes: Routes = [
     title: 'PrintHub Regional | Cadastro'
   },
   {
+    path: 'recuperar-senha',
+    loadComponent: () =>
+      import('./pages/recuperar-senha/recuperar-senha').then(m => m.RecuperarSenha),
+    title: 'PrintHub Regional | Recuperar senha'
+  },
+  {
     path: 'carrinho',
     loadComponent: () =>
       import('./pages/carrinho/carrinho').then(m => m.Carrinho),
@@ -27,6 +35,7 @@ export const routes: Routes = [
   },
   {
     path: 'meus-pedidos',
+    canActivate: [exigirPerfil()],
     loadComponent: () =>
       import('./pages/meus-pedidos/meus-pedidos').then(m => m.MeusPedidos),
     title: 'PrintHub Regional | Meus pedidos'
@@ -40,6 +49,7 @@ export const routes: Routes = [
 },
 {
   path: 'checkout',
+  canActivate: [exigirPerfil('CONSUMIDOR', 'PRODUTOR')],
   loadComponent: () =>
     import('./pages/checkout/checkout')
       .then(m => m.Checkout),
@@ -47,6 +57,7 @@ export const routes: Routes = [
 },
 {
   path: 'painel-produtor',
+  canActivate: [exigirPerfil('PRODUTOR')],
   loadComponent: () =>
     import('./pages/painel-produtor/painel-produtor')
       .then(m => m.PainelProdutor),
@@ -54,6 +65,7 @@ export const routes: Routes = [
 },
 {
   path: 'ponto-retirada',
+  canActivate: [exigirPerfil('ATENDENTE')],
   loadComponent: () =>
     import('./pages/ponto-retirada/ponto-retirada')
       .then(m => m.PontoRetirada),
@@ -61,20 +73,31 @@ export const routes: Routes = [
 },
 {
   path: 'dashboard',
+  canActivate: [exigirPerfil('ADMINISTRADOR', 'PRODUTOR')],
   loadComponent: () =>
     import('./pages/dashboard/dashboard')
       .then(m => m.Dashboard),
-  title: 'PrintHub Regional | Dashboard administrativo'
+  title: 'PrintHub Regional | Dashboard'
 },
 {
   path: 'gerenciar-pontos',
+  canActivate: [exigirPerfil('ADMINISTRADOR')],
   loadComponent: () =>
     import('./pages/gerenciar-pontos/gerenciar-pontos')
       .then(m => m.GerenciarPontos),
   title: 'PrintHub Regional | Gerenciar pontos de retirada'
 },
 {
+  path: 'administracao',
+  canActivate: [exigirPerfil('ADMINISTRADOR')],
+  loadComponent: () =>
+    import('./pages/administracao/administracao')
+      .then(m => m.Administracao),
+  title: 'PrintHub Regional | Usuários e registros'
+},
+{
   path: 'lotes',
+  canActivate: [exigirPerfil()],
   loadComponent: () =>
     import('./pages/lotes/lotes')
       .then(m => m.LotesPage),

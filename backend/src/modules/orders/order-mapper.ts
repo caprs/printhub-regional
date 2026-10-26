@@ -5,7 +5,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 const batchCount = { _count: { select: { orders: activeOrders } } };
 
 export const orderInclude = {
-  consumer: { select: { name: true } },
+  consumer: { select: { name: true, phone: true } },
   producer: { select: { name: true } },
   pickupPoint: {
     select: {
@@ -47,6 +47,8 @@ export function toPedido(order: OrderRow) {
     produtorId: order.producerId,
     cliente: order.consumer.name,
     clienteId: order.consumerId,
+    // Contato para o produtor e o atendente (não há chat no MVP).
+    clienteTelefone: order.consumer.phone,
     produtos: order.items.map(i => i.product.name),
     itens: order.items.map(i => ({
       produtoId: i.productId,

@@ -111,3 +111,43 @@
   color: #b91c1c;
   font-size: 14px;
 }
+.nota {
+  margin: 0 0 12px;
+  color: #b45309;
+}
+
+.avaliacoes {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid #e2e8f0;
+
+  h2 {
+    margin: 0 0 20px;
+    color: #172033;
+  }
+}
+
+.avaliacao {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  strong {
+    margin-right: 12px;
+    color: #b45309;
+  }
+
+  span {
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  p {
+    margin: 8px 0 0;
+  }
+}
+
+.sem-avaliacoes {
+  color: #64748b;
+}

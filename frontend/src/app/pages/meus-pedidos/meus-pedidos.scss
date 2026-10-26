@@ -172,3 +172,45 @@
     white-space: normal;
   }
 }
+
+.pedido-card.destaque {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+.pedido-card .alerta {
+  margin: 16px 0 0;
+}
+
+.acoes {
+  display: flex;
+  gap: 12px;
+}
+
+.avaliacoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.avaliado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #15803d;
+}
+
+.form-avaliacao {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+
+  strong {
+    margin-bottom: 12px;
+  }
+}

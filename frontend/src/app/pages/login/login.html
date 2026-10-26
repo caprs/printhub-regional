@@ -6,6 +6,10 @@
                 <p>Acesse sua conta no PrintHub Regional.</p>
             </div>
 
+            @if (sessaoExpirada) {
+            <p class="alerta atencao">Sua sessão expirou. Entre novamente para continuar.</p>
+            }
+
             <form [formGroup]="formulario" (ngSubmit)="entrar()">
                 <mat-form-field appearance="outline">
                     <mat-label>E-mail</mat-label>
@@ -38,17 +42,15 @@
                 </mat-form-field>
 
                 <div class="recuperar-senha">
-                    <span>
-                        Esqueceu sua senha? Recuperação disponível em breve.
-                    </span>
+                    <a routerLink="/recuperar-senha">Esqueceu sua senha?</a>
                 </div>
 
-                @if (mensagem) {
-                <p class="mensagem">{{ mensagem }}</p>
+                @if (mensagem()) {
+                <p class="alerta erro">{{ mensagem() }}</p>
                 }
 
-                <button mat-flat-button class="botao-entrar" type="submit">
-                    Entrar
+                <button mat-flat-button class="botao-entrar" type="submit" [disabled]="enviando()">
+                    {{ enviando() ? 'Entrando...' : 'Entrar' }}
                 </button>
             </form>
 

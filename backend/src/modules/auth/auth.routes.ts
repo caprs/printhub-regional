@@ -6,11 +6,17 @@ import * as service from './auth.service.js';
 
 const email = z.string().trim().toLowerCase().pipe(z.email());
 const senha = z.string().min(8).max(72);
+// Aceita "(14) 99999-0000", "+55 14 99999 0000" etc.; guarda como foi digitado.
+export const telefone = z
+  .string()
+  .trim()
+  .regex(/^[\d\s()+-]{10,20}$/, 'Informe um telefone com DDD.');
 
 export const registerBody = z.object({
   nome: z.string().trim().min(3).max(100),
   email,
   senha,
+  telefone: telefone.optional(),
   // ATENDENTE e ADMINISTRADOR são criados pelo administrador.
   perfil: z.enum(['CONSUMIDOR', 'PRODUTOR']),
 });

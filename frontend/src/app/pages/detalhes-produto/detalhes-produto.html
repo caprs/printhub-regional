@@ -1,5 +1,9 @@
 <section class="detalhes">
-    @if (produto) {
+    @if (carregando()) {
+    <p class="carregando">Carregando produto...</p>
+    } @else if (erroCarregar()) {
+    <p class="alerta erro">{{ erroCarregar() }}</p>
+    } @else if (produto(); as produto) {
     <a routerLink="/" class="voltar">
         <mat-icon>arrow_back</mat-icon>
         Voltar ao catálogo
@@ -17,6 +21,10 @@
 
             <p class="produtor">Vendido por {{ produto.produtor }}</p>
 
+            @if (produto.notaMedia !== null) {
+            <p class="nota">★ {{ produto.notaMedia }} · {{ produto.totalAvaliacoes }} avaliação(ões)</p>
+            }
+
             <strong class="preco">
                 {{ produto.preco | currency:'BRL' }}
             </strong>
@@ -25,10 +33,17 @@
 
             <div class="caracteristicas">
                 <p><strong>Material:</strong> {{ produto.material }}</p>
-                <p><strong>Disponibilidade:</strong> {{ produto.estoque }} unidades</p>
+                @if (produto.cor) {
+                <p><strong>Cor:</strong> {{ produto.cor }}</p>
+                }
+                <p><strong>Disponibilidade:</strong>
+                    {{ produto.estoque > 0 ? produto.estoque + ' unidades' : 'Esgotado' }}</p>
                 <p><strong>Prazo de produção:</strong> {{ produto.prazoProducao }} dias</p>
             </div>
 
+            @if (motivoSemCompra()) {
+            <p class="alerta">{{ motivoSemCompra() }}</p>
+            } @else {
             <div class="quantidade">
                 <span>Quantidade:</span>
 
@@ -48,13 +63,28 @@
                 <mat-icon>shopping_cart</mat-icon>
                 Adicionar ao carrinho
             </button>
+            }
 
             @if (mensagemErro) {
             <p class="mensagem-erro">{{ mensagemErro }}</p>
             }
-
-
         </div>
+    </div>
+
+    <div class="avaliacoes">
+        <h2>Avaliações</h2>
+
+        @for (avaliacao of avaliacoes(); track avaliacao.id) {
+        <article class="avaliacao">
+            <strong>{{ '★'.repeat(avaliacao.nota) }}{{ '☆'.repeat(5 - avaliacao.nota) }}</strong>
+            <span>{{ avaliacao.autor }} · {{ avaliacao.data | date:'dd/MM/yyyy' }}</span>
+            @if (avaliacao.comentario) {
+            <p>{{ avaliacao.comentario }}</p>
+            }
+        </article>
+        } @empty {
+        <p class="sem-avaliacoes">Este produto ainda não tem avaliações.</p>
+        }
     </div>
     } @else {
     <div class="nao-encontrado">

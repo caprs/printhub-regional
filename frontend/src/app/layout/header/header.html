@@ -6,15 +6,54 @@
         </a>
 
         <nav class="navigation">
-            <a routerLink="/">Catálogo</a>
-            <a routerLink="/meus-pedidos">Meus pedidos</a>
+            <a routerLink="/" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }">Catálogo</a>
+
+            @if (auth.logado()) {
+            @if (auth.temPerfil('CONSUMIDOR', 'PRODUTOR')) {
+            <a routerLink="/meus-pedidos" routerLinkActive="ativo">Meus pedidos</a>
+            }
+
+            @if (auth.temPerfil('PRODUTOR')) {
+            <a routerLink="/painel-produtor" routerLinkActive="ativo">Painel do produtor</a>
+            }
+
+            @if (auth.temPerfil('ATENDENTE')) {
+            <a routerLink="/ponto-retirada" routerLinkActive="ativo">Ponto de retirada</a>
+            }
+
+            @if (auth.temPerfil('ADMINISTRADOR', 'PRODUTOR')) {
+            <a routerLink="/dashboard" routerLinkActive="ativo">Dashboard</a>
+            }
+
+            @if (auth.temPerfil('ADMINISTRADOR')) {
+            <a routerLink="/gerenciar-pontos" routerLinkActive="ativo">Pontos</a>
+            <a routerLink="/administracao" routerLinkActive="ativo">Usuários</a>
+            }
+
+            <a routerLink="/lotes" routerLinkActive="ativo">Lotes</a>
+            }
         </nav>
 
         <div class="header-actions">
-            <a mat-icon-button routerLink="/carrinho" aria-label="Carrinho">
+            @if (podeComprar()) {
+            <a mat-icon-button routerLink="/carrinho" aria-label="Carrinho" class="botao-carrinho">
                 <mat-icon>shopping_cart</mat-icon>
+                @if (carrinho.quantidadeTotal() > 0) {
+                <span class="contador">{{ carrinho.quantidadeTotal() }}</span>
+                }
             </a>
+            }
 
+            @if (auth.usuario(); as usuario) {
+            <span class="usuario">
+                <strong>{{ usuario.nome }}</strong>
+                <small>{{ nomePerfil(usuario.perfil) }}</small>
+            </span>
+
+            <button mat-stroked-button type="button" (click)="auth.sair()">
+                Sair
+            </button>
+            } @else {
             <a mat-stroked-button routerLink="/login">
                 Entrar
             </a>
@@ -22,6 +61,7 @@
             <a mat-flat-button routerLink="/cadastro">
                 Criar conta
             </a>
+            }
         </div>
     </div>
 </header>

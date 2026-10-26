@@ -174,16 +174,15 @@
   margin-bottom: 24px;
 }
 
-.aviso-demo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
-  padding: 14px 18px;
-  border-radius: 10px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 14px;
+.produto-card.inativo {
+  opacity: 0.6;
+}
+
+.selo-inativo {
+  margin-left: 8px;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .lista-pedidos {

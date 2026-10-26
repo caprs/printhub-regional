@@ -21,6 +21,7 @@ Os nomes dos campos seguem os modelos que já existem em `frontend/src/app/core/
 | Datas | texto ISO 8601 em UTC (`2026-10-25T14:30:00.000Z`) |
 | Autenticação | cabeçalho `Authorization: Bearer <token>` |
 | Token | JWT, vale 7 dias |
+| CORS | Em desenvolvimento aceita qualquer `http://localhost:<porta>`. Em produção, só o que estiver em `CORS_ORIGIN`. |
 
 ### Resposta de lista (com paginação)
 
@@ -128,16 +129,17 @@ O backend muda o status do lote sozinho. O frontend só lê.
 
 Envia:
 ```json
-{ "nome": "Maria Souza", "email": "maria@email.com", "senha": "minimo8", "perfil": "CONSUMIDOR" }
+{ "nome": "Maria Souza", "email": "maria@email.com", "telefone": "(14) 99999-0000", "senha": "minimo8", "perfil": "CONSUMIDOR" }
 ```
 - `senha`: mínimo 8 caracteres.
+- `telefone`: opcional; 10 a 20 caracteres entre dígitos, espaço, `( ) + -`.
 - `perfil`: `CONSUMIDOR` ou `PRODUTOR`.
 
 Recebe `201`:
 ```json
 {
   "token": "eyJhbGciOi...",
-  "usuario": { "id": 7, "nome": "Maria Souza", "email": "maria@email.com", "perfil": "CONSUMIDOR" }
+  "usuario": { "id": 7, "nome": "Maria Souza", "email": "maria@email.com", "telefone": "(14) 99999-0000", "perfil": "CONSUMIDOR" }
 }
 ```
 Erro `409 EMAIL_EM_USO`.
@@ -145,11 +147,12 @@ Erro `409 EMAIL_EM_USO`.
 ### `POST /auth/login` — público
 
 Envia `{ "email": "...", "senha": "..." }`. Recebe `200` igual ao cadastro.
+Se for atendente, `usuario` traz também `pontoRetiradaId`.
 Erro `401 CREDENCIAIS_INVALIDAS` (mesma mensagem para e-mail ou senha errados).
 
 ### `GET /auth/me` — logado
 
-Recebe `200` com o objeto `usuario`. Se for atendente, vem também `pontoRetiradaId`.
+Recebe `200` com o objeto `usuario` (mesmo formato do login).
 
 ### `POST /auth/forgot-password` — público
 
@@ -321,6 +324,7 @@ Mantém todos os campos de `pedido.model.ts` e acrescenta detalhes:
   "produtorId": 2,
   "cliente": "Maria Souza",
   "clienteId": 7,
+  "clienteTelefone": "(14) 99999-0000",
   "produtos": ["Organizador de mesa", "Vaso geométrico"],
   "itens": [
     { "produtoId": 1, "nome": "Organizador de mesa", "quantidade": 1, "precoUnitario": 35, "subtotal": 35, "avaliado": false },

@@ -27,7 +27,16 @@ app.get('/api/openapi.json', (_req, res) => {
 });
 
 app.use(helmet());
-app.use(cors({ origin: env.corsOrigins }));
+// Em desenvolvimento, qualquer porta do localhost (ng serve pode subir em outra porta).
+const localhost = /^http:\/\/localhost:\d+$/;
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowed = !origin || env.corsOrigins.includes(origin) || (!env.isProduction && localhost.test(origin));
+      callback(null, allowed);
+    },
+  }),
+);
 app.use(express.json({ limit: '100kb' }));
 
 // Protege login e cadastro contra tentativas em massa.

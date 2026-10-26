@@ -1,48 +1,80 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
-import { Pedido } from '../models/pedido.model';
+import { environment } from '../../../environments/environment';
+import { Paginado } from '../models/api.model';
+import { Avaliacao } from '../models/dashboard.model';
+import { Pedido, StatusPedido } from '../models/pedido.model';
+import { parametros } from '../http/parametros';
+
+export interface NovoPedido {
+  pontoRetiradaId: number;
+  itens: { produtoId: number; quantidade: number }[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class Pedidos {
-  private readonly pedidos: Pedido[] = [
-    {
-      id: 1001,
-      data: '2026-10-23',
-      produtor: 'Produtor Exemplo A',
-      produtos: ['Organizador de mesa', 'Vaso geométrico'],
-      pontoRetirada: 'Ponto Centro',
-      subtotal: 83,
-      taxaEntrega: 6,
-      status: 'DISPONIVEL_RETIRADA',
-      lote: 'LOTE-001'
-    },
-    {
-      id: 1002,
-      data: '2026-10-24',
-      produtor: 'Produtor Exemplo B',
-      produtos: ['Suporte para celular'],
-      pontoRetirada: 'Ponto Bairro',
-      subtotal: 22,
-      taxaEntrega: null,
-      status: 'EM_PRODUCAO',
-      lote: 'LOTE-002'
-    },
-    {
-      id: 1003,
-      data: '2026-10-25',
-      produtor: 'Produtor Exemplo C',
-      produtos: ['Porta-chaves de parede'],
-      pontoRetirada: 'Ponto Centro',
-      subtotal: 29.90,
-      taxaEntrega: null,
-      status: 'AGUARDANDO_ACEITACAO',
-      lote: null
-    }
-  ];
+  private readonly http = inject(HttpClient);
+  private readonly api = environment.apiUrl;
 
-  listarMeusPedidos(): Pedido[] {
-    return this.pedidos;
+  criar(pedido: NovoPedido): Observable<Pedido> {
+    return this.http.post<Pedido>(`${this.api}/orders`, pedido);
+  }
+
+  listarMeusPedidos(status?: StatusPedido): Observable<Paginado<Pedido>> {
+    return this.listar('/orders/my', status);
+  }
+
+  listarDoProdutor(status?: StatusPedido): Observable<Paginado<Pedido>> {
+    return this.listar('/producer/orders', status);
+  }
+
+  // Sem status: o que está a caminho do ponto, no ponto ou já retirado.
+  listarDoPonto(status?: StatusPedido): Observable<Paginado<Pedido>> {
+    return this.listar('/attendant/orders', status);
+  }
+
+  aceitar(id: number): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.api}/orders/${id}/accept`, {});
+  }
+
+  rejeitar(id: number, motivo?: string): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.api}/orders/${id}/reject`, {
+      motivo: motivo?.trim() || undefined
+    });
+  }
+
+  atualizarStatus(id: number, status: 'EM_PRODUCAO' | 'PRONTO_PARA_ENTREGA'): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.api}/orders/${id}/status`, { status });
+  }
+
+  cancelar(id: number): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.api}/orders/${id}/cancel`, {});
+  }
+
+  confirmarRecebimento(id: number): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.api}/orders/${id}/received`, {});
+  }
+
+  confirmarRetirada(id: number): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.api}/orders/${id}/picked-up`, {});
+  }
+
+  avaliar(pedidoId: number, produtoId: number, nota: number, comentario?: string): Observable<Avaliacao> {
+    return this.http.post<Avaliacao>(`${this.api}/reviews`, {
+      pedidoId,
+      produtoId,
+      nota,
+      comentario: comentario?.trim() || undefined
+    });
+  }
+
+  private listar(caminho: string, status?: StatusPedido): Observable<Paginado<Pedido>> {
+    return this.http.get<Paginado<Pedido>>(`${this.api}${caminho}`, {
+      params: parametros({ status, porPagina: 50 })
+    });
   }
 }

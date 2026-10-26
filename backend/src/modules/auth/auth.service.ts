@@ -11,18 +11,28 @@ const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
-type UserRow = { id: number; name: string; email: string; role: Role };
+type UserRow = {
+  id: number;
+  name: string;
+  email: string;
+  role: Role;
+  phone: string | null;
+  pickupPoint?: { id: number } | null;
+};
 
+// O atendente recebe também o ponto pelo qual responde.
 export const toUsuario = (user: UserRow) => ({
   id: user.id,
   nome: user.name,
   email: user.email,
+  telefone: user.phone,
   perfil: user.role,
+  ...(user.role === 'ATENDENTE' && { pontoRetiradaId: user.pickupPoint?.id ?? null }),
 });
 
 const session = (user: UserRow) => ({ token: signToken(user), usuario: toUsuario(user) });
 
-export async function register(input: { nome: string; email: string; senha: string; perfil: Role }) {
+export async function register(input: { nome: string; email: string; senha: string; telefone?: string; perfil: Role }) {
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) throw new AppError(409, 'EMAIL_EM_USO', 'Já existe uma conta com este e-mail.');
 
@@ -31,6 +41,7 @@ export async function register(input: { nome: string; email: string; senha: stri
       name: input.nome,
       email: input.email,
       passwordHash: await bcrypt.hash(input.senha, 10),
+      phone: input.telefone || null,
       role: input.perfil,
     },
   });
@@ -44,7 +55,10 @@ export async function register(input: { nome: string; email: string; senha: stri
 const DUMMY_HASH = bcrypt.hashSync('senha-que-nao-existe', 10);
 
 export async function login(input: { email: string; senha: string }) {
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  const user = await prisma.user.findUnique({
+    where: { email: input.email },
+    include: { pickupPoint: { select: { id: true } } },
+  });
   const passwordOk = await bcrypt.compare(input.senha, user?.passwordHash ?? DUMMY_HASH);
   const valid = user?.active && passwordOk;
 
@@ -61,10 +75,7 @@ export async function me(userId: number) {
     include: { pickupPoint: { select: { id: true } } },
   });
 
-  return {
-    ...toUsuario(user),
-    ...(user.role === 'ATENDENTE' && { pontoRetiradaId: user.pickupPoint?.id ?? null }),
-  };
+  return toUsuario(user);
 }
 
 export async function forgotPassword(email: string) {

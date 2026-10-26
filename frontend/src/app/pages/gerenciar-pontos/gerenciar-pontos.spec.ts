@@ -1,3 +1,6 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { GerenciarPontos } from './gerenciar-pontos';
@@ -9,6 +12,7 @@ describe('GerenciarPontos', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [GerenciarPontos],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GerenciarPontos);

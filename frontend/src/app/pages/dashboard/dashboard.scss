@@ -35,16 +35,33 @@
   font-weight: 600;
 }
 
-.aviso-demo {
+.grid-listas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 56px;
+
+  h2 {
+    margin: 0 0 16px;
+    font-size: 19px;
+  }
+}
+
+.linha-lista {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 28px;
-  padding: 14px 18px;
-  border-radius: 10px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 14px;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.vazio {
+  color: #64748b;
+}
+
+@media (max-width: 850px) {
+  .grid-listas {
+    grid-template-columns: 1fr;
+  }
 }
 
 .grid-indicadores {

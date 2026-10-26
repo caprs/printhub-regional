@@ -28,7 +28,7 @@ O banco roda na porta **5433** (para não conflitar com um PostgreSQL instalado)
 | Comando | O que faz |
 |---|---|
 | `npm run dev` | Sobe a API e reinicia ao salvar |
-| `npm test` | Roda os 90 testes no banco `printhub_test` |
+| `npm test` | Roda os 91 testes no banco `printhub_test` |
 | `npm run typecheck` | Confere os tipos |
 | `npm run db:migrate` | Cria/aplica migrations depois de mudar o `schema.prisma` |
 | `npm run db:seed` | **Apaga tudo** e recria os dados de demonstração |

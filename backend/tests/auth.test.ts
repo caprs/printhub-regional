@@ -13,7 +13,16 @@ describe('POST /api/auth/register', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.token).toEqual(expect.any(String));
-    expect(res.body.usuario).toEqual({ id: 1, nome: 'Maria Souza', email: 'maria@email.com', perfil: 'CONSUMIDOR' });
+    expect(res.body.usuario).toEqual({ id: 1, nome: 'Maria Souza', email: 'maria@email.com', telefone: null, perfil: 'CONSUMIDOR' });
+  });
+
+  it('guarda o telefone opcional e valida o formato', async () => {
+    const ok = await api().post('/api/auth/register').send({ ...maria, telefone: '(14) 99999-0000' });
+    expect(ok.body.usuario.telefone).toBe('(14) 99999-0000');
+
+    const bad = await api().post('/api/auth/register').send({ ...maria, email: 'outra@email.com', telefone: 'abc' });
+    expect(bad.status).toBe(400);
+    expect(bad.body.erro.detalhes).toHaveProperty('telefone');
   });
 
   it('não permite escolher ADMINISTRADOR ou ATENDENTE', async () => {

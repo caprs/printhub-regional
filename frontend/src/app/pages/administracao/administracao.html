@@ -1,0 +1,150 @@
+<section class="administracao">
+    <div class="cabecalho">
+        <div>
+            <h1>Usuários e registros</h1>
+            <p>Gerencie as contas e consulte as operações críticas do sistema.</p>
+        </div>
+    </div>
+
+    @if (mensagem()) {
+    <p class="alerta sucesso">{{ mensagem() }}</p>
+    }
+
+    @if (erro()) {
+    <p class="alerta erro">{{ erro() }}</p>
+    }
+
+    <mat-tab-group>
+        <mat-tab label="Usuários">
+            <div class="filtros">
+                <mat-form-field appearance="outline">
+                    <mat-label>Buscar por nome ou e-mail</mat-label>
+                    <input matInput [(ngModel)]="busca" (keyup.enter)="carregarUsuarios()">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Perfil</mat-label>
+                    <mat-select [(ngModel)]="filtroPerfil" (selectionChange)="carregarUsuarios()">
+                        <mat-option value="">Todos</mat-option>
+                        @for (perfil of perfis; track perfil.valor) {
+                        <mat-option [value]="perfil.valor">{{ perfil.nome }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-stroked-button (click)="carregarUsuarios()">Buscar</button>
+                <button mat-flat-button (click)="abrirFormulario()">
+                    <mat-icon>person_add</mat-icon>
+                    Novo usuário
+                </button>
+            </div>
+
+            @if (formularioAberto) {
+            <form class="formulario" (ngSubmit)="criarUsuario()" #form="ngForm">
+                <h2>Novo usuário</h2>
+                <p class="dica">Atendentes e administradores só podem ser criados aqui.</p>
+
+                <div class="campos">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Nome</mat-label>
+                        <input matInput name="nome" [(ngModel)]="novo.nome" required minlength="3">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>E-mail</mat-label>
+                        <input matInput type="email" name="email" [(ngModel)]="novo.email" required email>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Senha inicial</mat-label>
+                        <input matInput name="senha" [(ngModel)]="novo.senha" required minlength="8">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Perfil</mat-label>
+                        <mat-select name="perfil" [(ngModel)]="novo.perfil" required>
+                            @for (perfil of perfis; track perfil.valor) {
+                            <mat-option [value]="perfil.valor">{{ perfil.nome }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div class="acoes">
+                    <button mat-button type="button" (click)="formularioAberto = false">Cancelar</button>
+                    <button mat-flat-button type="submit" [disabled]="form.invalid || salvando()">Criar usuário</button>
+                </div>
+            </form>
+            }
+
+            <div class="tabela">
+                @for (usuario of usuarios(); track usuario.id) {
+                <div class="linha" [class.inativo]="!usuario.ativo">
+                    <div class="pessoa">
+                        <strong>{{ usuario.nome }}</strong>
+                        <span>{{ usuario.email }}{{ usuario.telefone ? ' · ' + usuario.telefone : '' }}</span>
+                        @if (!usuario.ativo) {
+                        <span class="selo">Desativado</span>
+                        }
+                    </div>
+
+                    <mat-form-field appearance="outline" class="campo-perfil">
+                        <mat-select [value]="usuario.perfil" (selectionChange)="alterarPerfil(usuario, $event.value)"
+                            [disabled]="usuario.id === auth.usuario()?.id">
+                            @for (perfil of perfis; track perfil.valor) {
+                            <mat-option [value]="perfil.valor">{{ perfil.nome }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <button mat-button (click)="alternarAtivo(usuario)" [disabled]="usuario.id === auth.usuario()?.id">
+                        {{ usuario.ativo ? 'Desativar' : 'Reativar' }}
+                    </button>
+                </div>
+                } @empty {
+                <p class="dica">Nenhum usuário encontrado.</p>
+                }
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Registros (logs)">
+            <div class="filtros">
+                <mat-form-field appearance="outline">
+                    <mat-label>Filtrar por ação (ex.: PEDIDO_ACEITO)</mat-label>
+                    <input matInput [(ngModel)]="filtroAcao" (keyup.enter)="carregarRegistros()">
+                </mat-form-field>
+                <button mat-stroked-button (click)="carregarRegistros()">Filtrar</button>
+            </div>
+
+            <div class="tabela">
+                @for (registro of registros(); track registro.id) {
+                <div class="linha registro">
+                    <div class="pessoa">
+                        <strong>{{ registro.acao }}</strong>
+                        <span>
+                            {{ registro.usuario }} · {{ registro.entidade }}{{ registro.entidadeId ? ' #' + registro.entidadeId : '' }}
+                        </span>
+                        @if (resumoDados(registro.dados)) {
+                        <span class="dados">{{ resumoDados(registro.dados) }}</span>
+                        }
+                    </div>
+                    <span class="data">{{ registro.data | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                </div>
+                } @empty {
+                <p class="dica">Nenhum registro encontrado.</p>
+                }
+            </div>
+
+            <div class="paginacao">
+                <button mat-button [disabled]="paginaRegistros() <= 1" (click)="carregarRegistros(paginaRegistros() - 1)">
+                    Anterior
+                </button>
+                <span>Página {{ paginaRegistros() }} de {{ totalPaginasRegistros() }}</span>
+                <button mat-button [disabled]="paginaRegistros() >= totalPaginasRegistros()"
+                    (click)="carregarRegistros(paginaRegistros() + 1)">
+                    Próxima
+                </button>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</section>

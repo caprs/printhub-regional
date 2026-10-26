@@ -29,10 +29,12 @@
 
                 <mat-form-field appearance="outline">
                     <mat-label>Telefone</mat-label>
-                    <input matInput type="tel" formControlName="telefone">
+                    <input matInput type="tel" formControlName="telefone" placeholder="(14) 99999-0000">
 
                     @if (formulario.controls.telefone.hasError('required')) {
                     <mat-error>Informe seu telefone.</mat-error>
+                    } @else if (formulario.controls.telefone.hasError('pattern')) {
+                    <mat-error>Informe um telefone com DDD.</mat-error>
                     }
                 </mat-form-field>
 
@@ -78,12 +80,12 @@
                     }
                 </mat-form-field>
 
-                @if (mensagem) {
-                <p class="mensagem">{{ mensagem }}</p>
+                @if (mensagem()) {
+                <p class="alerta erro">{{ mensagem() }}</p>
                 }
 
-                <button mat-flat-button class="botao-cadastrar" type="submit">
-                    Criar conta
+                <button mat-flat-button class="botao-cadastrar" type="submit" [disabled]="enviando()">
+                    {{ enviando() ? 'Criando conta...' : 'Criar conta' }}
                 </button>
             </form>
 

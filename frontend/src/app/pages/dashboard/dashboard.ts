@@ -1,14 +1,18 @@
 
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
-import { Produtos } from '../../core/services/produtos';
-import { Pedidos } from '../../core/services/pedidos';
-import { PontosRetirada } from '../../core/services/pontos-retirada';
+import { Auth } from '../../core/services/auth';
+import { Administracao } from '../../core/services/administracao';
+import { Lotes } from '../../core/services/lotes';
+import { IndicadoresDashboard } from '../../core/models/dashboard.model';
+import { Lote, NOMES_STATUS_LOTE, StatusLote } from '../../core/models/lote.model';
+import { NOMES_STATUS_PEDIDO, StatusPedido } from '../../core/models/pedido.model';
+import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,44 +26,37 @@ import { PontosRetirada } from '../../core/services/pontos-retirada';
   styleUrl: './dashboard.scss'
 })
 export class Dashboard {
-  private produtosService = inject(Produtos);
-  private pedidosService = inject(Pedidos);
-  private pontosService = inject(PontosRetirada);
+  private auth = inject(Auth);
+  private administracao = inject(Administracao);
+  private lotesService = inject(Lotes);
 
-  readonly totalProdutos = computed(
-    () => this.produtosService.listaProdutos().length
-  );
+  readonly ehProdutor = this.auth.temPerfil('PRODUTOR');
 
-  readonly pedidos = this.pedidosService.listarMeusPedidos();
+  readonly indicadores = signal<IndicadoresDashboard | null>(null);
+  readonly lotes = signal<Lote[]>([]);
+  readonly erro = signal('');
 
-  readonly totalPedidos = this.pedidos.length;
+  // Pedidos por status, na ordem do fluxo, só os que têm algum pedido.
+  readonly pedidosPorStatus = computed(() => {
+    const porStatus = this.indicadores()?.pedidos.porStatus ?? {};
 
-  readonly pedidosEmAndamento = this.pedidos.filter(
-    pedido => !['RETIRADO', 'REJEITADO', 'CANCELADO'].includes(pedido.status)
-  ).length;
+    return (Object.keys(NOMES_STATUS_PEDIDO) as StatusPedido[])
+      .filter(status => (porStatus[status] ?? 0) > 0)
+      .map(status => ({ nome: NOMES_STATUS_PEDIDO[status], quantidade: porStatus[status] ?? 0 }));
+  });
 
-  readonly pontosAtivos = computed(() =>
-  this.pontosService.listaPontos().filter(ponto => ponto.ativo).length
-);
+  constructor() {
+    this.administracao.dashboard().subscribe({
+      next: indicadores => this.indicadores.set(indicadores),
+      error: erro => this.erro.set(mensagemErro(erro, 'Não foi possível carregar os indicadores.'))
+    });
 
-  readonly lotesDemonstrativos = [
-    {
-      codigo: 'LOTE-001',
-      ponto: 'Ponto Centro',
-      pedidos: 3,
-      capacidade: 3,
-      status: 'Fechado',
-      custoEntrega: 18
-    },
-    {
-      codigo: 'LOTE-002',
-      ponto: 'Ponto Bairro',
-      pedidos: 2,
-      capacidade: 3,
-      status: 'Em formação',
-      custoEntrega: 24
-    }
-  ];
+    this.lotesService.listar({ porPagina: 6 }).subscribe({
+      next: resposta => this.lotes.set(resposta.data)
+    });
+  }
 
-  readonly totalLotes = this.lotesDemonstrativos.length;
+  nomeStatusLote(status: StatusLote): string {
+    return NOMES_STATUS_LOTE[status];
+  }
 }

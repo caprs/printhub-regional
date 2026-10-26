@@ -43,6 +43,7 @@ model User {
   name         String
   email        String   @unique
   passwordHash String   @map("password_hash")
+  phone        String?
   role         Role
   active       Boolean  @default(true)
   createdAt    DateTime @default(now()) @map("created_at")

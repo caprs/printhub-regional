@@ -4,25 +4,47 @@
         <p>Acompanhe suas compras e os pontos de retirada.</p>
     </div>
 
-    <div class="aviso-demo">
-        <mat-icon>info</mat-icon>
-        <span>
-            Pedidos demonstrativos para desenvolvimento da interface.
-        </span>
-    </div>
+    @if (mensagem()) {
+    <p class="alerta sucesso">{{ mensagem() }}</p>
+    }
 
-    @for (pedido of pedidos; track pedido.id) {
-    <article class="pedido-card">
+    @if (erro()) {
+    <p class="alerta erro">{{ erro() }}</p>
+    }
+
+    @if (carregando()) {
+    <p class="carregando">Carregando pedidos...</p>
+    }
+
+    @for (pedido of pedidos(); track pedido.id) {
+    <article class="pedido-card" [class.destaque]="pedido.id === novoPedidoId">
         <div class="pedido-topo">
             <div>
                 <span class="numero">Pedido #{{ pedido.id }}</span>
-                <p>Realizado em {{ pedido.data | date:'dd/MM/yyyy':'UTC' }}</p>
+                <p>Realizado em {{ pedido.data | date:'dd/MM/yyyy HH:mm' }}</p>
+                @if (pedido.status === 'AGUARDANDO_ACEITACAO') {
+                <p>O produtor responde até {{ pedido.prazoAceite | date:'dd/MM/yyyy HH:mm' }}</p>
+                }
             </div>
 
             <span class="status" [ngClass]="classeStatus(pedido.status)">
                 {{ nomeStatus(pedido.status) }}
             </span>
         </div>
+
+        @if (pedido.motivoRecusa) {
+        <p class="alerta erro">Motivo da recusa: {{ pedido.motivoRecusa }}</p>
+        }
+
+        @if (pedido.motivoCancelamento === 'PRAZO_EXPIRADO') {
+        <p class="alerta atencao">Cancelado automaticamente: o produtor não respondeu em 48 horas.</p>
+        }
+
+        @if (pedido.status === 'DISPONIVEL_RETIRADA') {
+        <p class="alerta sucesso">
+            Seu pedido chegou ao {{ pedido.pontoRetirada }}. Pague {{ pedido.total | currency:'BRL' }} na retirada.
+        </p>
+        }
 
         <div class="pedido-conteudo">
             <div class="informacao">
@@ -32,8 +54,8 @@
 
             <div class="informacao">
                 <span>Produtos</span>
-                @for (produto of pedido.produtos; track $index) {
-                <p>{{ produto }}</p>
+                @for (item of pedido.itens; track item.produtoId) {
+                <p>{{ item.quantidade }}× {{ item.nome }}</p>
                 }
             </div>
 
@@ -44,7 +66,7 @@
 
             <div class="informacao">
                 <span>Lote coletivo</span>
-                <strong>{{ pedido.lote ?? 'Aguardando aceitação' }}</strong>
+                <strong>{{ pedido.lote ?? (pedido.status === 'AGUARDANDO_ACEITACAO' ? 'Aguardando aceitação' : '—') }}</strong>
             </div>
         </div>
 
@@ -59,35 +81,77 @@
                     Entrega:
                     @if (pedido.taxaEntrega !== null) {
                     {{ pedido.taxaEntrega | currency:'BRL' }}
+                    } @else if (pedido.taxaEstimada !== null) {
+                    até {{ pedido.taxaEstimada | currency:'BRL' }} (definida no fechamento do lote)
                     } @else {
-                    A definir após fechamento do lote
+                    —
                     }
                 </p>
 
                 <strong>
-                    @if (pedido.taxaEntrega !== null) {
-                    Total:
-                    {{ pedido.subtotal + pedido.taxaEntrega | currency:'BRL' }}
-                    } @else {
-                    Subtotal:
-                    {{ pedido.subtotal | currency:'BRL' }}
-                    }
+                    {{ pedido.taxaDefinitiva ? 'Total:' : 'Total estimado:' }}
+                    {{ pedido.total | currency:'BRL' }}
                 </strong>
             </div>
 
             <div class="acoes">
-                <a mat-stroked-button routerLink="/">
-                    Voltar ao catálogo
-                </a>
+                @if (podeCancelar(pedido)) {
+                <button mat-stroked-button (click)="cancelar(pedido)" [disabled]="processandoId() === pedido.id">
+                    Cancelar pedido
+                </button>
+                }
             </div>
         </div>
+
+        @if (pedido.status === 'RETIRADO') {
+        <div class="avaliacoes">
+            @for (item of pedido.itens; track item.produtoId) {
+            @if (item.avaliado) {
+            <p class="avaliado"><mat-icon>check_circle</mat-icon> {{ item.nome }} avaliado</p>
+            } @else if (avaliando() === pedido.id + '-' + item.produtoId) {
+            <div class="form-avaliacao">
+                <strong>Avaliar {{ item.nome }}</strong>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Nota</mat-label>
+                    <mat-select [(ngModel)]="nota">
+                        @for (n of [5, 4, 3, 2, 1]; track n) {
+                        <mat-option [value]="n">{{ '★'.repeat(n) }} ({{ n }})</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Comentário (opcional)</mat-label>
+                    <textarea matInput [(ngModel)]="comentario" rows="2" maxlength="1000"></textarea>
+                </mat-form-field>
+
+                <div class="acoes">
+                    <button mat-flat-button (click)="enviarAvaliacao(pedido, item)"
+                        [disabled]="processandoId() === pedido.id">
+                        Enviar avaliação
+                    </button>
+                    <button mat-button (click)="avaliando.set(null)">Cancelar</button>
+                </div>
+            </div>
+            } @else {
+            <button mat-stroked-button (click)="abrirAvaliacao(pedido, item)">
+                <mat-icon>star</mat-icon>
+                Avaliar {{ item.nome }}
+            </button>
+            }
+            }
+        </div>
+        }
     </article>
     } @empty {
+    @if (!carregando() && !erro()) {
     <div class="sem-pedidos">
         <mat-icon>receipt_long</mat-icon>
         <h2>Você ainda não tem pedidos</h2>
         <p>Explore o catálogo para encontrar seu primeiro produto.</p>
         <a mat-flat-button routerLink="/">Explorar produtos</a>
     </div>
+    }
     }
 </section>

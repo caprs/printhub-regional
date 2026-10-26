@@ -35,15 +35,11 @@
   font-weight: 600;
 }
 
-.aviso-demo {
-  display: flex;
+.aguardando {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 28px;
-  padding: 14px 18px;
-  border-radius: 10px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  gap: 8px;
+  color: #b45309;
   font-size: 14px;
 }
 

@@ -1,3 +1,6 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 
 import { PontosRetirada } from './pontos-retirada';
@@ -6,7 +9,7 @@ describe('PontosRetirada', () => {
   let service: PontosRetirada;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
     service = TestBed.inject(PontosRetirada);
   });
 

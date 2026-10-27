@@ -1,4 +1,4 @@
-// Produção: endereço público da API (troque pelo endereço do Render depois do deploy).
+// Produção: endereço público da API no Render.
 export const environment = {
-  apiUrl: 'https://printhub-api.onrender.com/api'
+  apiUrl: 'https://printhub-api-qx0k.onrender.com/api'
 };

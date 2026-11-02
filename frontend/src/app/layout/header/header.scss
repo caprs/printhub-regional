@@ -59,22 +59,28 @@
 
 .botao-carrinho {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .contador {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 0;
+  right: 0;
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
-  border-radius: 9px;
+  border-radius: 999px;
   background: #2563eb;
-  color: #fff;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
   line-height: 18px;
   text-align: center;
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
 .usuario {
@@ -100,32 +106,102 @@
   }
 }
 
-@media (max-width: 850px) {
+/* Menu mobile oculto no desktop */
+.menu-mobile-button {
+  display: none;
+}
+
+/* Cabeçalho para tablets e celulares */
+@media (max-width: 1000px) {
   .header-container {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 12px 16px;
   }
 
   .navigation {
-    order: 3;
-    width: 100%;
-    justify-content: center;
+    display: none;
+  }
+
+  .menu-mobile-button {
+    display: inline-flex;
+    flex-shrink: 0;
   }
 
   .header-actions {
+    margin-left: auto;
     gap: 8px;
+  }
+
+  .usuario {
+    display: none;
   }
 }
 
+/* Ajustes para celulares menores */
 @media (max-width: 520px) {
   .logo-imagem {
-    width: 170px;
+    width: 150px;
   }
 
   .header-container {
-    padding: 12px;
+    padding: 10px 12px;
+    min-height: 64px;
   }
 
   .header-actions a[mat-flat-button] {
     display: none;
+  }
+
+  .header-actions button[mat-stroked-button] {
+    padding: 0 10px;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 1000px) {
+  .header-container {
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .header-actions {
+    margin-left: auto;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .menu-mobile-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .header-container {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .logo .logo-imagem {
+    width: 135px;
+    max-height: 44px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .header-actions button[mat-stroked-button] {
+    min-width: 52px;
+    padding: 0 8px;
+  }
+
+  .menu-mobile-button {
+    width: 40px;
+    height: 40px;
   }
 }

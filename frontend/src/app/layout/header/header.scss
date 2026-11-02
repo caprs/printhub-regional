@@ -21,19 +21,16 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #172033;
+  flex-shrink: 0;
   text-decoration: none;
-  font-size: 21px;
-  font-weight: 700;
-  white-space: nowrap;
 
-  mat-icon {
-    color: #2563eb;
-  }
-
-  strong {
-    color: #2563eb;
+  .logo-imagem {
+    display: block;
+    width: 230px;
+    max-width: 100%;
+    height: auto;
+    max-height: 65px;
+    object-fit: contain;
   }
 }
 
@@ -120,8 +117,8 @@
 }
 
 @media (max-width: 520px) {
-  .logo {
-    font-size: 16px;
+  .logo-imagem {
+    width: 170px;
   }
 
   .header-container {

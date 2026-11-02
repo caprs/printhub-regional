@@ -2,16 +2,16 @@ import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-
+import { MatMenuModule } from '@angular/material/menu';
 import { Auth } from '../../core/services/auth';
 import { Carrinho } from '../../core/services/carrinho';
 import { Perfil } from '../../core/models/usuario.model';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive, MatButtonModule, MatIconModule],
+  imports: [RouterLink, RouterLinkActive, MatButtonModule, MatIconModule, MatMenuModule],
   templateUrl: './header.html',
-  styleUrl: './header.scss'
+  styleUrl: './header.scss',
 })
 export class Header implements OnInit {
   readonly auth = inject(Auth);
@@ -27,7 +27,7 @@ export class Header implements OnInit {
       CONSUMIDOR: 'Consumidor',
       PRODUTOR: 'Produtor',
       ATENDENTE: 'Atendente',
-      ADMINISTRADOR: 'Administrador'
+      ADMINISTRADOR: 'Administrador',
     };
 
     return nomes[perfil];

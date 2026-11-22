@@ -23,7 +23,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://printhub-web.onrender.com
+        value: https://printhub-web-4kmp.onrender.com
 
   # Site Angular como arquivos estáticos: gratuito e não "dorme".
   - type: web

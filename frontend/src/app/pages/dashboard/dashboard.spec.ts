@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { SharedModule } from '../../shared/shared.module';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -11,7 +12,8 @@ describe('Dashboard', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Dashboard],
+      declarations: [Dashboard],
+      imports: [SharedModule],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 

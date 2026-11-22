@@ -9,12 +9,8 @@ import { Lote, NOMES_STATUS_LOTE, StatusLote } from '../../core/models/lote.mode
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-lotes',
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatIconModule
-  ],
   templateUrl: './lotes.html',
   styleUrl: './lotes.scss'
 })

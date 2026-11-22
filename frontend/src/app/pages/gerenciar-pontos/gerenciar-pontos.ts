@@ -18,18 +18,8 @@ import { UsuarioAdmin } from '../../core/models/usuario.model';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-gerenciar-pontos',
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCardModule,
-    MatSelectModule,
-    MatSlideToggleModule
-  ],
   templateUrl: './gerenciar-pontos.html',
   styleUrl: './gerenciar-pontos.scss'
 })

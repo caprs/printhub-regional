@@ -1,13 +1,16 @@
 import { provideHttpClient } from '@angular/common/http';
+import { SharedModule } from './shared/shared.module';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
+import { Header } from './layout/header/header';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
+      declarations: [App, Header],
+      imports: [SharedModule],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
   });

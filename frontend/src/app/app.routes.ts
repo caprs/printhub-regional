@@ -5,102 +5,80 @@ import { exigirPerfil } from './core/guards/perfil.guard';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () =>
-      import('./pages/catalogo/catalogo').then(m => m.Catalogo),
+    loadChildren: () => import('./pages/catalogo/catalogo.module').then(m => m.CatalogoModule),
     title: 'PrintHub Regional | Catálogo'
   },
   {
     path: 'login',
-    loadComponent: () =>
-      import('./pages/login/login').then(m => m.Login),
+    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginModule),
     title: 'PrintHub Regional | Login'
   },
   {
     path: 'cadastro',
-    loadComponent: () =>
-      import('./pages/cadastro/cadastro').then(m => m.Cadastro),
+    loadChildren: () => import('./pages/cadastro/cadastro.module').then(m => m.CadastroModule),
     title: 'PrintHub Regional | Cadastro'
   },
   {
     path: 'recuperar-senha',
-    loadComponent: () =>
-      import('./pages/recuperar-senha/recuperar-senha').then(m => m.RecuperarSenha),
+    loadChildren: () => import('./pages/recuperar-senha/recuperar-senha.module').then(m => m.RecuperarSenhaModule),
     title: 'PrintHub Regional | Recuperar senha'
   },
   {
     path: 'carrinho',
-    loadComponent: () =>
-      import('./pages/carrinho/carrinho').then(m => m.Carrinho),
+    loadChildren: () => import('./pages/carrinho/carrinho.module').then(m => m.CarrinhoModule),
     title: 'PrintHub Regional | Carrinho'
   },
   {
     path: 'meus-pedidos',
     canActivate: [exigirPerfil()],
-    loadComponent: () =>
-      import('./pages/meus-pedidos/meus-pedidos').then(m => m.MeusPedidos),
+    loadChildren: () => import('./pages/meus-pedidos/meus-pedidos.module').then(m => m.MeusPedidosModule),
     title: 'PrintHub Regional | Meus pedidos'
   },
   {
   path: 'produto/:id',
-  loadComponent: () =>
-    import('./pages/detalhes-produto/detalhes-produto')
-      .then(m => m.DetalhesProduto),
+  loadChildren: () => import('./pages/detalhes-produto/detalhes-produto.module').then(m => m.DetalhesProdutoModule),
   title: 'PrintHub Regional | Detalhes do produto'
 },
 {
   path: 'checkout',
   canActivate: [exigirPerfil('CONSUMIDOR', 'PRODUTOR')],
-  loadComponent: () =>
-    import('./pages/checkout/checkout')
-      .then(m => m.Checkout),
+  loadChildren: () => import('./pages/checkout/checkout.module').then(m => m.CheckoutModule),
   title: 'PrintHub Regional | Finalizar pedido'
 },
 {
   path: 'painel-produtor',
   canActivate: [exigirPerfil('PRODUTOR')],
-  loadComponent: () =>
-    import('./pages/painel-produtor/painel-produtor')
-      .then(m => m.PainelProdutor),
+  loadChildren: () => import('./pages/painel-produtor/painel-produtor.module').then(m => m.PainelProdutorModule),
   title: 'PrintHub Regional | Painel do produtor'
 },
 {
   path: 'ponto-retirada',
   canActivate: [exigirPerfil('ATENDENTE')],
-  loadComponent: () =>
-    import('./pages/ponto-retirada/ponto-retirada')
-      .then(m => m.PontoRetirada),
+  loadChildren: () => import('./pages/ponto-retirada/ponto-retirada.module').then(m => m.PontoRetiradaModule),
   title: 'PrintHub Regional | Ponto de retirada'
 },
 {
   path: 'dashboard',
   canActivate: [exigirPerfil('ADMINISTRADOR', 'PRODUTOR')],
-  loadComponent: () =>
-    import('./pages/dashboard/dashboard')
-      .then(m => m.Dashboard),
+  loadChildren: () => import('./pages/dashboard/dashboard.module').then(m => m.DashboardModule),
   title: 'PrintHub Regional | Dashboard'
 },
 {
   path: 'gerenciar-pontos',
   canActivate: [exigirPerfil('ADMINISTRADOR')],
-  loadComponent: () =>
-    import('./pages/gerenciar-pontos/gerenciar-pontos')
-      .then(m => m.GerenciarPontos),
+  loadChildren: () => import('./pages/gerenciar-pontos/gerenciar-pontos.module').then(m => m.GerenciarPontosModule),
   title: 'PrintHub Regional | Gerenciar pontos de retirada'
 },
 {
   path: 'administracao',
   canActivate: [exigirPerfil('ADMINISTRADOR')],
-  loadComponent: () =>
-    import('./pages/administracao/administracao')
-      .then(m => m.Administracao),
+  loadChildren: () => import('./pages/administracao/administracao.module').then(m => m.AdministracaoModule),
   title: 'PrintHub Regional | Usuários e registros'
 },
 {
   path: 'lotes',
   canActivate: [exigirPerfil()],
-  loadComponent: () =>
-    import('./pages/lotes/lotes')
-      .then(m => m.LotesPage),
+  loadChildren: () => import('./pages/lotes/lotes.module').then(m => m.LotesModule),
   title: 'PrintHub Regional | Lotes coletivos'
 },
   {

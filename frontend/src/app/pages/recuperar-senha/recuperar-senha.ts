@@ -11,15 +11,8 @@ import { Auth } from '../../core/services/auth';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-recuperar-senha',
-  imports: [
-    RouterLink,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule
-  ],
   templateUrl: './recuperar-senha.html',
   styleUrl: '../login/login.scss'
 })

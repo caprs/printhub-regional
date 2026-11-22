@@ -12,12 +12,8 @@ import { Pedido, StatusPedido } from '../../core/models/pedido.model';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-ponto-retirada',
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule
-  ],
   templateUrl: './ponto-retirada.html',
   styleUrl: './ponto-retirada.scss'
 })

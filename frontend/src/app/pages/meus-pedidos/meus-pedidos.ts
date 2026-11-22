@@ -14,17 +14,8 @@ import { ItemPedido, NOMES_STATUS_PEDIDO, Pedido, StatusPedido } from '../../cor
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-meus-pedidos',
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule
-  ],
   templateUrl: './meus-pedidos.html',
   styleUrl: './meus-pedidos.scss'
 })

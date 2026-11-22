@@ -14,17 +14,8 @@ import { Auth } from '../../core/services/auth';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-cadastro',
-  imports: [
-    RouterLink,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatIconModule
-  ],
   templateUrl: './cadastro.html',
   styleUrl: './cadastro.scss'
 })

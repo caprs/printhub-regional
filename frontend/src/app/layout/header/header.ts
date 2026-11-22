@@ -8,8 +8,8 @@ import { Carrinho } from '../../core/services/carrinho';
 import { Perfil } from '../../core/models/usuario.model';
 
 @Component({
+  standalone: false,
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive, MatButtonModule, MatIconModule, MatMenuModule],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })

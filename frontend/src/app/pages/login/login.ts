@@ -17,16 +17,8 @@ import { Auth } from '../../core/services/auth';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-login',
-  imports: [
-    RouterLink,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
-  ],
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })

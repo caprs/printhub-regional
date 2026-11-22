@@ -15,13 +15,8 @@ import { NOMES_STATUS_PEDIDO, StatusPedido } from '../../core/models/pedido.mode
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-dashboard',
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatIconModule,
-    MatButtonModule
-  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })

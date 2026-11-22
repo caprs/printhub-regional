@@ -7,13 +7,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { Carrinho as CarrinhoService } from '../../core/services/carrinho';
 
 @Component({
+  standalone: false,
   selector: 'app-carrinho',
-  imports: [
-    CommonModule,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule
-  ],
   templateUrl: './carrinho.html',
   styleUrl: './carrinho.scss'
 })

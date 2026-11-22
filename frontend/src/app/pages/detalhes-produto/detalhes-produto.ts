@@ -13,13 +13,8 @@ import { Avaliacao } from '../../core/models/dashboard.model';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-detalhes-produto',
-  imports: [
-    CommonModule,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule
-  ],
   templateUrl: './detalhes-produto.html',
   styleUrl: './detalhes-produto.scss'
 })

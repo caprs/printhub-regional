@@ -18,18 +18,8 @@ import { Produtos } from '../../core/services/produtos';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-catalogo',
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatIconModule
-  ],
   templateUrl: './catalogo.html',
   styleUrl: './catalogo.scss'
 })

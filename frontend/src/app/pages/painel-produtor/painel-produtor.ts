@@ -18,17 +18,8 @@ import { NOMES_STATUS_PEDIDO, Pedido, StatusPedido } from '../../core/models/ped
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-painel-produtor',
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCardModule
-  ],
   templateUrl: './painel-produtor.html',
   styleUrl: './painel-produtor.scss'
 })

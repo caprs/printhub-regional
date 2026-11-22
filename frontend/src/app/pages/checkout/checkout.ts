@@ -14,14 +14,8 @@ import { PontoRetirada } from '../../core/models/ponto-retirada.model';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-checkout',
-  imports: [
-    CommonModule,
-    RouterLink,
-    MatButtonModule,
-    MatRadioModule,
-    MatIconModule
-  ],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss'
 })

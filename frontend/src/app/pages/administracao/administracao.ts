@@ -16,17 +16,8 @@ import { RegistroAuditoria } from '../../core/models/dashboard.model';
 import { mensagemErro } from '../../core/http/erro-api';
 
 @Component({
+  standalone: false,
   selector: 'app-administracao',
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTabsModule
-  ],
   templateUrl: './administracao.html',
   styleUrl: './administracao.scss'
 })

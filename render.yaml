@@ -36,7 +36,7 @@ services:
       # Toda rota (/login, /produto/3...) abre o app; o Angular cuida da navegação.
       - type: rewrite
         source: /*
-        destination: /index.csr.html
+        destination: /index.html
 
 databases:
   - name: printhub-db

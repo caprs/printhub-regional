@@ -2,80 +2,116 @@
 
 ## Visão geral
 
-O PrintHub Regional aproxima consumidores e produtores locais de peças fabricadas por impressão 3D. A aplicação oferece catálogo, pedidos, retirada em pontos cadastrados e consolidação de pedidos em lotes para dividir o custo de entrega.
+O PrintHub Regional é um marketplace regional de produtos fabricados por impressão 3D. Conecta consumidores, produtores e pontos de retirada, centralizando catálogo, pedidos, acompanhamento e agrupamento de entregas em lotes com divisão de custos.
 
 ## Tecnologias e arquitetura
 
-- **Frontend:** Angular 21, TypeScript, SCSS, Angular Material e RxJS. O bootstrap é feito pelo `AppModule`; `AppRoutingModule` define a navegação e módulos por tela são carregados sob demanda. A saída é uma SPA estática, sem SSR e com `prerender` desativado.
-- **Backend:** Node.js 20+, Express 5 e TypeScript. A API REST é separada por áreas em `backend/src/modules/`; Zod valida entradas, JWT autentica usuários, middleware verifica perfis, Helmet e CORS protegem a aplicação, e Swagger publica o contrato.
-- **Persistência:** PostgreSQL acessado pelo Prisma 7 com adapter `pg`. A URL do banco é fornecida por `DATABASE_URL` no backend.
-- **Integração:** serviços Angular usam `environment.apiUrl`; o interceptor adiciona o token JWT. `CORS_ORIGIN` aceita uma ou mais origens separadas por vírgula. Em desenvolvimento, a API aceita portas locais do `ng serve`.
+- **Frontend:** Angular 21, TypeScript, SCSS, Angular Material e RxJS. A aplicação usa `AppModule`, `AppRoutingModule`, NgModules por funcionalidade e carregamento sob demanda. É uma SPA estática, sem SSR ou SSG.
+- **Backend:** Node.js, Express 5 e TypeScript. API REST organizada em `backend/src/modules/`, com validação Zod, autenticação JWT, autorização por perfil, Helmet, CORS e documentação Swagger.
+- **Persistência:** PostgreSQL, Prisma 7 e adaptador `pg`. A conexão é definida por `DATABASE_URL` no backend.
+- **Integração:** serviços Angular usam `environment.apiUrl`; o interceptor de autenticação envia o JWT. O backend restringe origens por `CORS_ORIGIN` em produção.
 
-## Entidades e relações
+### Arquitetura simplificada
 
-O esquema em `backend/prisma/schema.prisma` contém `User`, `Product`, `PickupPoint`, `Order`, `OrderItem`, `Batch`, `Review`, `OrderStatusHistory`, `AuditLog` e `PasswordResetToken`. Pedidos ligam consumidor, produtor, ponto de retirada e, opcionalmente, lote. Itens guardam quantidade e preço unitário no momento da compra. O diagrama com cardinalidades e atributos está em [diagrama-classes.md](diagrama-classes.md).
+```text
+Navegador → SPA Angular (Render Static Site)
+                  ↓ HTTPS / JSON
+             API REST (Render Web Service)
+                  ↓ Prisma
+             PostgreSQL (Render)
+```
+
+## Modelo de dados
+
+O arquivo `backend/prisma/schema.prisma` define dez modelos: `User`, `Product`, `PickupPoint`, `Order`, `OrderItem`, `Batch`, `Review`, `OrderStatusHistory`, `AuditLog` e `PasswordResetToken`.
+
+- `User` representa os perfis de acesso e relaciona-se a produtos, pedidos, avaliações e registros de operação.
+- `Product` pertence a um produtor; `Order` identifica consumidor, produtor e ponto de retirada.
+- `OrderItem` associa produtos aos pedidos e preserva quantidade e preço unitário no momento da compra.
+- `Batch` reúne pedidos de um ponto de retirada. A associação de um pedido a um lote é opcional.
+- `Review`, `OrderStatusHistory`, `AuditLog` e `PasswordResetToken` dão suporte a avaliações, rastreabilidade, auditoria e recuperação de acesso.
+
+Consulte [`diagrama-classes.md`](diagrama-classes.md) para atributos e cardinalidades. Valores monetários são armazenados em centavos inteiros.
 
 ## Perfis e funcionalidades
 
-- **CONSUMIDOR:** consulta catálogo, compra, acompanha pedidos e avalia produtos após o pedido.
-- **PRODUTOR:** mantém produtos próprios e processa os pedidos destinados a si.
-- **ATENDENTE:** recebe e processa retiradas no ponto associado.
-- **ADMINISTRADOR:** gerencia pontos, usuários e consulta indicadores e auditoria.
+- **Consumidor:** cadastro e login, consulta ao catálogo, carrinho, checkout, acompanhamento de pedidos e avaliações conforme as regras do sistema.
+- **Produtor:** manutenção de produtos e gestão de pedidos recebidos.
+- **Atendente:** recebimento e confirmação de retiradas no ponto associado.
+- **Administrador:** administração de usuários e pontos de retirada, indicadores e recursos de auditoria.
 
-As rotas frontend usam guards de perfil e endpoints protegidos repetem a autorização no backend. A interface existente contém cadastro/login/recuperação, catálogo e detalhes, carrinho, checkout, pedidos, painel de produtor, operação de retirada, lotes, dashboard e administração de pontos/usuários.
+As rotas Angular possuem controles de acesso por perfil; a API também verifica autenticação e autorização. As telas incluem catálogo, detalhes, carrinho, checkout, meus pedidos, painel do produtor, pontos de retirada, lotes, dashboard e administração.
 
-## Regras de negócio relevantes
+## Regras de negócio
 
-- Valores monetários são persistidos em centavos inteiros (`*Cents`).
-- O estoque é reservado ao criar o pedido e restaurado nas situações previstas nas regras do serviço de pedidos.
-- Pedidos têm prazo de 48 horas para resposta do produtor; a rotina de manutenção processa vencimentos.
-- Pedidos não são apagados fisicamente pela operação comum: cancelamento/recusa e histórico preservam o registro.
-- Lotes podem fechar ao atingir três pedidos ou após sete dias. A taxa é dividida em centavos com distribuição determinística da sobra.
-- Pontos e usuários podem ser desativados; exclusão física indiscriminada não é adequada para registros com referências ou histórico.
-- Operações críticas registram auditoria.
+- Estoque é reservado na criação do pedido e restaurado nas situações de cancelamento ou recusa previstas pelo serviço.
+- O produtor tem prazo de 48 horas para responder ao pedido; uma rotina processa vencimentos.
+- O pedido mantém seu histórico de status em vez de ser excluído fisicamente na operação comum.
+- Lotes são organizados por ponto de retirada e podem fechar ao atingir três pedidos ou após sete dias.
+- O custo da entrega é dividido em centavos entre os pedidos do lote, com distribuição determinística de eventuais centavos restantes.
+- Usuários e pontos podem ser desativados para preservar vínculos e histórico.
+- Operações críticas podem gerar registros de auditoria.
+
+As regras acima descrevem o comportamento documentado no projeto; para detalhes de exceções e transições, consultar os serviços do backend.
 
 ## Execução local
 
-Requisitos: Node.js 20 ou superior, npm e Docker Desktop (ou PostgreSQL local).
+**Pré-requisitos:** Node.js compatível com o projeto, npm, Docker Desktop ou PostgreSQL local.
+
+Terminal 1 — banco e backend, partindo da raiz do repositório:
 
 ```powershell
-# Terminal 1 — PostgreSQL e API
 cd backend
 Copy-Item .env.example .env
+# Configure DATABASE_URL e JWT_SECRET no .env
+# Inicie o Docker Desktop antes do comando abaixo
 docker compose up -d
 npm ci
 npm run db:migrate
 npm run db:seed
 npm run dev
+```
 
-# Terminal 2 — SPA Angular
+> `db:seed` destina-se somente ao ambiente de desenvolvimento. Confirme as configurações do `.env` antes de executar comandos que alteram o banco.
+
+Terminal 2 — frontend, partindo da raiz do repositório:
+
+```powershell
 cd frontend
 npm ci
 npm start
 ```
 
-O compose local publica PostgreSQL na porta 5433. Configure `DATABASE_URL` e `JWT_SECRET` em `backend/.env`; o exemplo serve para desenvolvimento, não produção. Configure o URL da API em `frontend/src/environments/environment.development.ts`. A aplicação abre em `http://localhost:4200` e a API em `http://localhost:3000/api`.
+- Frontend local: http://localhost:4200
+- API local: http://localhost:3000/api
+- Swagger local: http://localhost:3000/api/docs
 
-Para gerar artefatos de produção:
+O Docker Compose local utiliza a porta 5433 para PostgreSQL. A URL da API de desenvolvimento fica em `frontend/src/environments/environment.development.ts`.
 
-```powershell
-cd frontend; npm run build
-cd ..\backend; npm run build
-```
+Para compilar, execute `npm run build` separadamente nas pastas `frontend` e `backend`.
 
-## Dados e migrações
+## Migrações e dados
 
-As migrações existentes estão em `backend/prisma/migrations/`. `npm run db:migrate` é para desenvolvimento. `npm run db:deploy` aplica migrações versionadas a um banco de produção; revise o SQL e faça backup conforme a política do ambiente antes de executá-lo. `npm run db:seed` recria dados de demonstração e não deve ser executado sobre dados de produção.
+As migrações estão em `backend/prisma/migrations/`. Para desenvolvimento, use o script `db:migrate` conforme o `package.json`; para produção, o blueprint executa `npx prisma migrate deploy`. O banco de produção é separado do PostgreSQL local. **Não execute o seed de demonstração em produção.** Antes de operações destrutivas, revise o SQL e as condições de backup/recuperação disponíveis.
 
-## Publicação
+## Publicação em produção
 
-O blueprint existente em `render.yaml` descreve backend, site estático, PostgreSQL e rewrite para `index.html`. Os serviços ainda precisam ser criados e configurados pelo responsável; nenhum deploy foi feito. Veja [publicacao.md](publicacao.md) para as variáveis e etapas.
+O sistema está publicado no Render:
 
-## Verificações desta revisão
+- **Aplicação:** https://printhub-web-4kmp.onrender.com
+- **API:** https://printhub-api-7wby.onrender.com/api
+- **Swagger:** https://printhub-api-7wby.onrender.com/api/docs
+- **Health check configurado:** https://printhub-api-7wby.onrender.com/api/health
+- **Repositório:** https://github.com/caprs/printhub-regional
 
-- `npx ngc -p tsconfig.app.json` no frontend terminou sem mensagens de erro.
-- `npm run build` passou antes da extração final das rotas para módulos lazy, mas ainda precisa ser repetido para medir o pacote final; a execução posterior fora do sandbox foi rejeitada.
-- `npm run typecheck` no backend passou.
-- `npx prisma validate` passou.
-- Os testes backend não foram executados: a configuração confirma que eles limpam as tabelas do banco `printhub_test` antes de cada caso. O build de produção ainda precisa ser repetido após a extração dos módulos.
-- O último build completo anterior à modularização lazy apresentou 884,75 kB iniciais; a medição final permanece pendente.
+O `render.yaml` configura frontend estático, API Node e banco PostgreSQL, incluindo rewrite de rotas da SPA para `/index.html`. O frontend usa a URL pública da API, e o backend configura CORS para a origem publicada. Veja [`publicacao.md`](publicacao.md).
+
+## Verificações e testes
+
+**Compilações verificadas:** `npm run build` no frontend e backend; `npm run typecheck` no backend. O build final do Angular passou com bundle inicial de aproximadamente **758,67 kB**, com aviso de orçamento de tamanho, sem impedir a compilação. O banco local apresentava duas migrações aplicadas.
+
+**Testes funcionais locais relatados:** cadastro/login, catálogo, carrinho, checkout, pedidos, CRUD de produtos, CRUD de pontos de retirada e dashboard com quatro indicadores (total de pedidos, pedidos em andamento, produtos ativos e lotes coletivos). Os indicadores foram conferidos contra registros e permaneceram após atualização da página.
+
+**Testes em produção confirmados:** acesso à aplicação publicada, resposta da API de produtos, cadastro de produto com exibição no catálogo e conclusão de pedido com visualização em “Meus pedidos”. Esses testes confirmam os fluxos verificados, mas não equivalem à validação de todas as permissões, rotinas automáticas e cenários de exceção.
+
+**Testes automatizados:** os arquivos fornecidos nesta revisão não incluem a saída de uma execução atual das suítes; portanto, nenhuma contagem de testes é declarada como validada nesta etapa.

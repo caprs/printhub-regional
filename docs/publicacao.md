@@ -1,37 +1,72 @@
-# Guia de publicação
+# Guia de publicação — PrintHub Regional
 
-Este guia descreve a configuração necessária. Não cria recursos, não aplica migrações e não publica o sistema. O repositório já contém um blueprint de referência em `render.yaml`; reveja nomes, disponibilidade, políticas de retenção e preços diretamente no provedor antes de escolher uma hospedagem.
+## Situação atual
 
-## Componentes
+O PrintHub Regional **já foi publicado no Render** e teve seus fluxos básicos de produto e pedido testados em produção. Este documento registra a configuração adotada e orienta futuras atualizações; não executa alterações nos serviços.
 
-1. **Frontend:** publicar os arquivos estáticos gerados pelo Angular em `frontend/dist/frontend/browser`. O build precisa produzir `index.html`; configurar fallback/rewrite de todas as rotas não-arquivo para `/index.html` para que URLs como `/produto/12` sejam resolvidas pelo Angular.
-2. **Backend:** executar o serviço Node/Express construído em `backend/dist/server.js`. A plataforma precisa permitir definir `PORT`, expor `/api/health` e manter o processo ativo.
-3. **Banco:** PostgreSQL persistente e acessível pelo serviço backend. Não use o banco efêmero de teste.
+## Serviços e endereços
 
-## Variáveis
-
-| Variável | Serviço | Uso |
+| Componente | Serviço Render | Endereço / configuração |
 |---|---|---|
-| `NODE_ENV=production` | Backend | Habilita regras de produção e proxy confiável. |
-| `PORT` | Backend | Porta atribuída pelo ambiente; se omitida, o código usa 3000. |
-| `DATABASE_URL` | Backend e comandos de migração | String PostgreSQL fornecida pelo provedor, com TLS/parâmetros exigidos pelo serviço. |
-| `JWT_SECRET` | Backend | Segredo aleatório próprio, com pelo menos 32 caracteres; nunca reutilize o valor de exemplo. |
-| `CORS_ORIGIN` | Backend | Origem pública exata do frontend; múltiplas origens separadas por vírgula. |
-| API URL de produção | Frontend | Definida em `frontend/src/environments/environment.ts`; deve corresponder à URL HTTPS pública da API. |
+| Frontend | `printhub-web` — Static Site | https://printhub-web-4kmp.onrender.com |
+| Backend | `printhub-api` — Web Service | https://printhub-api-7wby.onrender.com |
+| API REST | Backend | https://printhub-api-7wby.onrender.com/api |
+| Swagger | Backend | https://printhub-api-7wby.onrender.com/api/docs |
+| Health check | Backend | `/api/health` |
+| PostgreSQL | `printhub-db` | Conexão privada via `DATABASE_URL` |
 
-Não coloque `DATABASE_URL`, `JWT_SECRET` ou senhas no frontend, no Git ou em arquivos publicados. Cadastre segredos pelo painel do provedor.
+Os recursos foram criados a partir do blueprint `render.yaml` do repositório. O banco Render é independente do banco PostgreSQL usado localmente no Docker.
 
-## Passos
+## Configuração do frontend
 
-1. Escolha serviços que atendam a persistência, requisitos de disponibilidade, orçamento e região. Confirme limites e política de retenção vigentes com o provedor.
-2. Crie um PostgreSQL persistente e obtenha a URL privada/recomendada para a conexão backend.
-3. Configure as variáveis do backend e valide `/api/health` após iniciar o serviço.
-4. Revise as migrações versionadas em `backend/prisma/migrations/` e faça backup do banco. Depois de aprovado, aplique `npm run db:deploy` no pipeline ou comando de release do backend. Não use `db:seed` em produção.
-5. Configure `frontend/src/environments/environment.ts` com a URL pública HTTPS da API e gere os artefatos com `npm ci` e `npm run build` em `frontend/`.
-6. Publique o conteúdo de `frontend/dist/frontend/browser` como SPA e configure o rewrite para `/index.html`.
-7. Configure `CORS_ORIGIN` com a origem efetivamente publicada do site, sem barra final, e reinicie o backend.
-8. Valide login, catálogo, checkout, atualização de status, acesso aos perfis e recuperação de senha em ambiente de homologação. Não marque o fluxo como aprovado sem executá-lo.
+- Diretório raiz do serviço: `frontend`.
+- Build: `npm ci && npm run build`.
+- Diretório publicado: `dist/frontend/browser`.
+- Rewrite de `/*` para `/index.html` para permitir acesso direto às rotas Angular.
+- URL de produção da API em `frontend/src/environments/environment.ts`: `https://printhub-api-7wby.onrender.com/api`.
+- SPA estática, sem renderização no servidor.
 
-## Observações sobre o blueprint existente
+## Configuração do backend
 
-`render.yaml` configura API, site estático e banco. O backend executa `prisma migrate deploy` no comando de build existente; antes de ativar esse blueprint, confirme que as migrações e a estratégia de backup estão revisadas. O fallback foi ajustado para `/index.html`, coerente com a SPA sem pré-renderização. O plano/limites dos recursos devem ser revisados na data da publicação.
+- Diretório raiz do serviço: `backend`.
+- Build configurado no blueprint: `npm ci --include=dev && npm run build && npx prisma migrate deploy`.
+- Inicialização: `npm start` (executa o servidor compilado).
+- Health check: `/api/health`.
+- A porta é atribuída pelo ambiente de hospedagem; não é necessário expor localmente a porta 3000.
+
+### Variáveis de ambiente
+
+| Variável | Finalidade |
+|---|---|
+| `NODE_ENV=production` | Habilita configuração de produção |
+| `PORT` | Porta fornecida pelo ambiente, quando aplicável |
+| `DATABASE_URL` | Conexão PostgreSQL fornecida pelo serviço de banco |
+| `JWT_SECRET` | Segredo de autenticação gerado e armazenado no provedor |
+| `CORS_ORIGIN` | `https://printhub-web-4kmp.onrender.com` |
+
+**Segurança:** nunca adicionar `DATABASE_URL`, `JWT_SECRET`, senhas ou tokens ao Git, ao frontend ou à documentação. O `JWT_SECRET` deve ser gerenciado no painel do Render.
+
+## Atualização de versão
+
+1. Verifique se as alterações funcionam localmente e se os builds passam.
+2. Revise migrações novas, se houver; considere backup e riscos de alterações de esquema.
+3. Faça commit e push para a branch configurada no Render (`main` na publicação realizada).
+4. Acompanhe os deploys de frontend e backend no painel Render.
+5. Confirme o health check, abra o site e execute testes funcionais após a atualização.
+6. Caso o frontend passe a utilizar outro endereço de API, atualize `environment.ts`; caso o endereço do site mude, atualize `CORS_ORIGIN` e publique novamente.
+
+## Testes já realizados em produção
+
+- Aplicação Angular acessível pelo endereço público.
+- Endpoint `/api/products` respondendo com JSON paginado.
+- Cadastro de produto persistido no PostgreSQL do Render e exibido no catálogo.
+- Pedido realizado e localizado posteriormente em “Meus pedidos”.
+
+**Ainda não comprovados nesta revisão:** teste completo de todas as permissões administrativas, recuperação de senha, processamento automático de vencimentos e fechamento automático de lotes no ambiente publicado.
+
+## Cuidados operacionais
+
+- Não executar `npm run db:seed` no banco de produção: o seed de demonstração pode substituir ou alterar dados.
+- Não presumir que o plano gratuito oferece retenção indefinida, backups automáticos ou disponibilidade contínua; consultar as condições vigentes do Render antes de depender do serviço.
+- O banco de produção começa separado dos dados locais; os produtos locais não são copiados automaticamente.
+- Para diagnosticar falhas, consultar logs do serviço, variáveis de ambiente e estado das migrações.

@@ -1,29 +1,47 @@
-# Checklist da entrega
+# Checklist de entrega — PrintHub Regional
 
-Status usados: **Concluído**, **Pendente** e **Necessita validação**. “Concluído” significa que há evidência no código ou em comando observado; não implica validação visual/integrada da interface.
+**Atualização:** 22/11/2026. Status: **Concluído** (evidência observada), **Necessita validação** (ainda não demonstrado integralmente) ou **Pendente** (ação a realizar). A validação de uma funcionalidade não implica teste de todos os seus cenários de erro.
 
 | Requisito | Status | Evidência / observação |
 |---|---|---|
-| Angular com `standalone: false` | Concluído | `frontend/src/app/app.ts`, `frontend/src/app/layout/header/header.ts` e componentes em `frontend/src/app/pages/` declaram explicitamente a opção. |
-| Organização em NgModules | Necessita validação | `app.module.ts`, `app-routing.module.ts`, `shared/shared.module.ts` e módulos lazy por página; `npx ngc -p tsconfig.app.json` terminou sem erro, build final pendente. |
-| Roteamento | Necessita validação | `app.routes.ts`, guards e módulos lazy; build e navegação manual pós-conversão ainda precisam ser conferidos. |
-| SPA sem SSR e sem SSG | Necessita validação | `angular.json` define saída `static`, `prerender: false`, sem entradas de servidor; fontes SSR e dependências removidas. Confirmar após build final. |
-| Angular Material usado na interface | Concluído | Componentes Material aparecem nas telas e `shared/shared.module.ts` fornece módulos usados. |
-| Quatro ou mais entidades relacionadas | Concluído | `schema.prisma` contém dez modelos com chaves e relações. Diagrama: `diagrama-classes.md`. |
-| CRUD de produtos pela interface | Necessita validação | `pages/painel-produtor/`, `modules/products/`; confirmar cenários na UI. |
-| CRUD de pontos pela interface | Necessita validação | `pages/gerenciar-pontos/`, rotas `pickup-points`; desativação preserva referências. |
-| CRUD/fluxo de pedidos | Necessita validação | `pages/checkout/`, `pages/meus-pedidos/`, `pages/painel-produtor/`, `pages/ponto-retirada/`; pedido usa cancelamento/status/histórico em vez de exclusão física. |
-| CRUD administrativo de usuários | Necessita validação | `pages/administracao/`, `/api/admin/users`; criação, edição de perfil e ativação/desativação. |
-| Dashboard baseado em dados reais | Concluído | `admin.service.ts` agrega pedidos, produtos, pontos, lotes e itens no Prisma; `pages/dashboard/` exibe indicadores e listas. |
-| Fluxo principal completo pela interface | Necessita validação | Rotas e telas existem para cadastro, catálogo, carrinho, checkout, pedidos e operação; não houve execução manual ponta a ponta. |
-| Autenticação, autorização e integração API | Concluído | `auth.interceptor.ts`, `perfil.guard.ts`, middleware backend e serviços HTTP; `environment.ts` aponta para a URL de API de produção configurada no projeto. |
-| Configuração sem SSR/SSG e fallback SPA | Necessita validação | `angular.json` e `render.yaml` (rewrite para `/index.html`); confirmar artefato `index.html` no build atual. |
-| Backend usa porta e banco do ambiente | Concluído | `config/env.ts` valida `PORT` e `DATABASE_URL`; `prisma.config.ts` usa a URL do ambiente. |
-| Migrações existentes validadas | Concluído | `npx prisma validate` passou; nenhuma migração foi executada nesta revisão. |
-| Publicação em nuvem | Pendente | Blueprint e passos descritos; nenhum serviço foi criado ou publicado. |
-| Testes backend | Pendente | Não executados porque `tests/helpers.ts` limpa tabelas do banco `printhub_test`; validar que esse banco pode ser descartado antes de rodar. |
-| Testes frontend e navegação real | Pendente | Não executados. |
-| Build Angular e tamanho de bundle final | Pendente | Build anterior à extração lazy passou em 884,75 kB iniciais. Build final foi tentado, mas a solicitação de execução fora do sandbox foi rejeitada. |
-| Typecheck backend | Concluído | `npm run typecheck` passou. |
-| Validação Prisma | Concluído | `npx prisma validate` passou. |
-| Publicação, commit, push ou alteração remota | Pendente | Nenhuma dessas ações foi realizada. |
+| Angular com `standalone: false` | Concluído | Componentes e módulos adequados ao padrão solicitado. |
+| Organização em NgModules | Concluído | `AppModule`, `AppRoutingModule`, módulos por tela e build Angular concluído. |
+| Roteamento Angular | Concluído | Navegação local e acesso ao site publicado testados. |
+| SPA sem SSR e sem SSG | Concluído | `angular.json` com saída estática e `prerender: false`; build de produção aprovado. |
+| Angular Material | Concluído | Utilizado na interface e em módulos compartilhados. |
+| Quatro ou mais entidades relacionadas | Concluído | Dez modelos no `schema.prisma`; diagrama revisado. |
+| CRUD de produtos | Concluído | Operações testadas localmente; cadastro e listagem também testados em produção. |
+| CRUD de pontos de retirada | Concluído | Operações e desativação testadas localmente. |
+| Fluxo de pedidos | Concluído | Carrinho, checkout e acompanhamento testados localmente e pedido confirmado em produção. Cancelamento/status substituem exclusão física comum. |
+| CRUD administrativo de usuários | Necessita validação | Rotas e telas documentadas; execução manual completa do CRUD administrativo não foi confirmada nesta revisão. |
+| Dashboard com pelo menos três KPIs | Concluído | Quatro indicadores conferidos localmente: total de pedidos, pedidos em andamento, produtos ativos e lotes coletivos. |
+| Fluxo principal ponta a ponta | Concluído | Pedido criado e visualizado em “Meus pedidos” no ambiente publicado. |
+| Autenticação e integração API | Concluído | Cadastro/login local, integração API e operação de produto/pedido em produção. |
+| Autorização de todos os perfis | Necessita validação | Guards Angular e middleware backend existem; falta confirmação de todos os cenários de permissão em produção. |
+| Rewrite SPA e artefato `index.html` | Concluído | Frontend estático publicado com roteamento configurado. |
+| Backend usa porta e banco do ambiente | Concluído | Serviço publicado e integrado ao PostgreSQL Render. |
+| Migrações do banco | Concluído | Duas migrações conferidas no ambiente local; deploy de produção configurado com `prisma migrate deploy` e persistência confirmada. |
+| Publicação em nuvem | Concluído | Frontend, API e banco publicados no Render. |
+| Testes funcionais frontend | Concluído | Cadastro, catálogo, carrinho, checkout, produtos, pontos e dashboard testados localmente. |
+| Testes automatizados backend/frontend | Necessita validação | Não foi apresentada nesta revisão saída atual das suítes; executar em banco de testes isolado antes de declarar contagem final. |
+| Build Angular final | Concluído | `npm run build` passou; bundle inicial de 758,67 kB, com aviso de orçamento. |
+| Build e typecheck backend | Concluído | `npm run build` e `npm run typecheck` passaram. |
+| Validação Prisma | Concluído | `npx prisma validate` passou na revisão técnica anterior. |
+| Documentação técnica e diagrama | Concluído | Arquivos Markdown revisados conforme informações fornecidas e `schema.prisma`. |
+| Guia de publicação | Concluído | Atualizado com os endereços e a configuração do Render. |
+| Commit e push das correções de URL | Concluído | Commit `0ba2694` publicado na branch `main`. |
+| Commit e push desta revisão documental | Pendente | Os arquivos revisados precisam ser copiados para `docs/`, conferidos e enviados ao GitHub. |
+
+## Links de entrega
+
+- **Aplicação:** https://printhub-web-4kmp.onrender.com
+- **API:** https://printhub-api-7wby.onrender.com/api
+- **Repositório:** https://github.com/caprs/printhub-regional
+- **Documentação:** pasta `docs/` no repositório.
+
+## Pendências antes de enviar ao professor
+
+1. Substituir os quatro arquivos na pasta `docs/` e verificar o diagrama Mermaid renderizado no GitHub.
+2. Fazer commit e push da documentação revisada.
+3. Se o professor exigir evidência de testes automatizados, executar as suítes em ambiente isolado e registrar a saída real.
+4. Conferir requisitos específicos do enunciado e anexar evidências ou capturas solicitadas, se houver.

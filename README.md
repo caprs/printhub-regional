@@ -9,7 +9,7 @@ Acesse o projeto
 - API REST: https://printhub-api-7wby.onrender.com/api
 - Documentação interativa da API (Swagger): https://printhub-api-7wby.onrender.com/api/docs
 - Código-fonte: https://github.com/caprs/printhub-regional
-  A aplicação foi publicada no Render e teve o cadastro e a consulta de produtos e o fluxo de compra e visualização de pedidos testados no ambiente publicado.
+  A aplicação foi publicada no Render e possui um ambiente de demonstração configurado, com usuários de diferentes perfis, produtos, pontos de retirada, pedidos e lotes coletivos. Os principais fluxos do sistema foram testados no ambiente publicado.
   Sobre o sistema
   O PrintHub conecta produtores regionais de peças impressas em 3D a consumidores. Os usuários podem consultar produtos, montar um carrinho, realizar pedidos e escolher pontos de retirada. O sistema também organiza pedidos em lotes para compartilhamento do custo de entrega.
 
@@ -33,6 +33,61 @@ docs/api-contrato.md Endpoints, campos, permissões e respostas da API
 docs/publicacao.md Configuração e publicação no Render
 docs/checklist-entrega.md Requisitos e situação da entrega
 render.yaml Blueprint dos serviços no Render
+
+## Avaliação da aplicação publicada
+
+A aplicação possui um ambiente de demonstração previamente configurado para facilitar a avaliação do Projeto Integrador.
+
+### Contas de demonstração em produção
+
+| Perfil        | E-mail                   |
+| ------------- | ------------------------ |
+| Administrador | admin@printhub.demo      |
+| Produtor      | produtor@printhub.demo   |
+| Consumidor    | consumidor@printhub.demo |
+
+As senhas de acesso serão disponibilizadas na entrega privada do AVA.
+
+### Dados de demonstração
+
+O ambiente publicado foi preparado com:
+
+- 4 produtos cadastrados, com imagens, preços e estoque;
+- 2 pontos de retirada ativos;
+- 4 pedidos aceitos pelo produtor;
+- 1 lote coletivo fechado, contendo 3 pedidos;
+- 1 lote coletivo em formação, contendo 1 pedido;
+- Dashboard com indicadores alimentados pelos dados cadastrados.
+
+### Roteiro de avaliação
+
+**Consumidor:**
+
+- Acessar o catálogo de produtos;
+- Adicionar produtos ao carrinho;
+- Realizar um pedido e selecionar um ponto de retirada;
+- Acompanhar os pedidos e lotes coletivos.
+
+**Produtor:**
+
+- Cadastrar, editar e excluir produtos;
+- Consultar e aceitar pedidos recebidos;
+- Acompanhar os lotes coletivos;
+- Consultar os indicadores do dashboard.
+
+**Administrador:**
+
+- Acessar o painel administrativo;
+- Gerenciar pontos de retirada;
+- Consultar as funcionalidades administrativas disponíveis.
+
+### Formação dos lotes coletivos
+
+O sistema agrupa pedidos aceitos em lotes coletivos, que são fechados ao atingir três pedidos ou completar sete dias.
+
+Durante a validação em produção, o custo de entrega de R$ 8,00 foi dividido entre três pedidos, resultando em uma taxa apresentada de R$ 2,67 por pedido, demonstrando uma economia aproximada de 66,6%.
+
+A aplicação está hospedada no plano gratuito do Render, podendo apresentar demora no primeiro acesso após um período de inatividade.
 
 Executar localmente
 Pré-requisitos: Node.js 20 ou superior, npm e Docker Desktop (ou uma instância PostgreSQL compatível).
@@ -79,5 +134,23 @@ Atenção: os testes de integração do backend podem limpar tabelas do banco de
 Os builds de frontend e backend e o typecheck do backend foram executados com sucesso durante a revisão final. O build Angular apresentou um aviso de orçamento de bundle, sem impedir a compilação. A contagem histórica documentada é de 91 testes de backend e 29 de frontend; essa contagem não equivale a uma nova execução das suítes nesta revisão.
 Documentação
 Para mais detalhes, consulte a [documentação técnica](docs/documentacao-tecnica.md), o [diagrama de classes](docs/diagrama-classes.md), o [contrato da API](docs/api-contrato.md), o [guia de publicação](docs/publicacao.md) e o [checklist de entrega](docs/checklist-entrega.md).
-Estado do projeto
-O sistema está publicado e os fluxos de cadastro/consulta de produtos e de realização/consulta de pedidos foram testados em produção. Outras funcionalidades e permissões devem ser verificadas conforme o checklist antes de serem consideradas integralmente validadas no ambiente publicado.
+
+## Estado do projeto
+
+O PrintHub Regional está publicado no Render e possui um ambiente de demonstração configurado para avaliação.
+
+Foram validados em produção:
+
+- Cadastro e autenticação de consumidores e produtores;
+- Acesso ao painel administrativo;
+- Cadastro de pontos de retirada;
+- Cadastro e consulta de produtos com imagens;
+- Fluxo de compra e acompanhamento de pedidos;
+- Aceitação de pedidos pelo produtor;
+- Formação e fechamento automático de lotes coletivos por quantidade de pedidos;
+- Divisão do custo de entrega;
+- Indicadores do dashboard.
+
+Os resultados obtidos demonstram o funcionamento integrado do frontend, backend e banco de dados no ambiente publicado.
+
+As demais funcionalidades e permissões devem ser verificadas conforme o checklist de entrega.
